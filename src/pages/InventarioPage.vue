@@ -93,6 +93,21 @@
             <q-input v-model.number="form.precioCompra" label="Precio compra" type="number" :rules="[required, minCero]" outlined lazy-rules />
             <q-input v-model.number="form.precioVenta" label="Precio venta" type="number" :rules="[required, minCero]" outlined lazy-rules />
             <q-input v-model.number="form.existencia" label="Existencia" type="number" outlined />
+
+            <div class="row items-center q-gutter-y-sm">
+              <div v-if="imagePreview" class="col-12 flex flex-center relative-position">
+                <q-img :src="imagePreview" style="max-width: 200px; max-height: 200px" class="rounded-borders" />
+                <q-btn flat dense icon="close" color="negative" size="sm" class="absolute-top-right" @click="removeImage" />
+              </div>
+              <div class="col-12 row q-gutter-sm justify-center">
+                <q-btn icon="folder_open" label="Seleccionar archivo" color="primary" outline @click="triggerFileInput" />
+                <q-btn icon="photo_camera" label="Tomar foto" color="primary" outline @click="triggerCamera" />
+              </div>
+            </div>
+
+            <input ref="fileInputRef" type="file" accept="image/*" style="display: none" @change="onFileSelected" />
+            <input ref="cameraInputRef" type="file" accept="image/*" capture="environment" style="display: none" @change="onFileSelected" />
+
             <q-card-actions align="right">
               <q-btn label="Cancelar" flat color="primary" v-close-popup />
               <q-btn label="Guardar" type="submit" color="primary" />
@@ -150,8 +165,12 @@ const form = ref<ProductoRequest>({
   precioCompra: 0,
   precioVenta: 0,
   existencia: 0,
+  imagen: '',
 });
 const editandoId = ref<string | null>(null);
+const imagePreview = ref<string | null>(null);
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const cameraInputRef = ref<HTMLInputElement | null>(null);
 
 const filteredRows = computed(() => {
   let rows = store.productos.map((p) => ({ ...p, _expandDesc: false }));
@@ -191,13 +210,43 @@ function abrirDialogo(producto?: ProductoResponse) {
       precioCompra: producto.precioCompra,
       precioVenta: producto.precioVenta,
       existencia: producto.existencia,
+      imagen: producto.imagen || '',
     };
+    imagePreview.value = producto.imagen || null;
   } else {
     editando.value = false;
     editandoId.value = null;
-    form.value = { codigo: '', nombre: '', descripcion: '', precioCompra: 0, precioVenta: 0, existencia: 0 };
+    form.value = { codigo: '', nombre: '', descripcion: '', precioCompra: 0, precioVenta: 0, existencia: 0, imagen: '' };
+    imagePreview.value = null;
   }
   dialogoVisible.value = true;
+}
+
+function triggerFileInput() {
+  fileInputRef.value?.click();
+}
+
+function triggerCamera() {
+  cameraInputRef.value?.click();
+}
+
+function onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target?.result as string;
+    imagePreview.value = dataUrl;
+    form.value.imagen = dataUrl;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function removeImage() {
+  imagePreview.value = null;
+  form.value.imagen = '';
 }
 
 async function guardar() {

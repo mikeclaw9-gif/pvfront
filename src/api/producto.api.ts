@@ -7,6 +7,8 @@ export interface ProductoRequest {
   precioCompra: number;
   precioVenta: number;
   existencia: number;
+  imagen?: string;
+  pesado?: boolean;
 }
 
 export interface ProductoResponse {
@@ -20,6 +22,8 @@ export interface ProductoResponse {
   activo: boolean;
   fechaCreacion: string;
   fechaModificacion: string;
+  imagen?: string;
+  pesado?: boolean;
 }
 
 export interface PageResponse<T> {

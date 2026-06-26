@@ -7,6 +7,7 @@
         <div class="text-caption text-grey">Inicia sesión para continuar</div>
       </q-card-section>
       <q-card-section>
+        <BackendStatusIndicator :status="backendStatus" :error="backendError" />
         <q-form @submit.prevent="handleLogin" class="q-gutter-y-md">
           <q-input
             v-model="email"
@@ -53,10 +54,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth-store';
 import { Notify } from 'quasar';
+import BackendStatusIndicator from '../components/BackendStatusIndicator.vue';
+import { checkHealth } from '../api/health.api';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -65,10 +68,24 @@ const email = ref('');
 const password = ref('');
 const showPassword = ref(false);
 const loading = ref(false);
+const backendStatus = ref<'checking' | 'available' | 'unavailable'>('checking');
+const backendError = ref<string | undefined>();
 
 function required(val: string) {
   return !!val || 'Campo requerido';
 }
+
+async function checkBackendHealth() {
+  backendStatus.value = 'checking';
+  backendError.value = undefined;
+  const result = await checkHealth();
+  backendStatus.value = result.available ? 'available' : 'unavailable';
+  backendError.value = result.error;
+}
+
+onMounted(() => {
+  checkBackendHealth();
+});
 
 async function handleLogin() {
   loading.value = true;

@@ -14,44 +14,58 @@
     </q-header>
 
     <q-drawer v-model="drawer" show-if-above :width="220" :breakpoint="600" bordered>
-      <q-list padding>
-        <q-item clickable v-ripple to="/dashboard">
-          <q-item-section avatar>
-            <q-icon name="dashboard" />
-          </q-item-section>
-          <q-item-section>Dashboard</q-item-section>
-        </q-item>
-        <q-item clickable v-ripple to="/inventario">
-          <q-item-section avatar>
-            <q-icon name="inventory_2" />
-          </q-item-section>
-          <q-item-section>Inventario</q-item-section>
-        </q-item>
-        <q-item clickable v-ripple to="/clientes">
-          <q-item-section avatar>
-            <q-icon name="people" />
-          </q-item-section>
-          <q-item-section>Clientes</q-item-section>
-        </q-item>
-        <q-item clickable v-ripple to="/usuarios">
-          <q-item-section avatar>
-            <q-icon name="manage_accounts" />
-          </q-item-section>
-          <q-item-section>Usuarios</q-item-section>
-        </q-item>
-        <q-separator spaced />
-        <q-item tag="label" v-ripple>
-          <q-item-section avatar>
-            <q-icon name="dark_mode" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Tema oscuro</q-item-label>
-          </q-item-section>
-          <q-item-section side>
-            <q-toggle v-model="darkMode" @update:model-value="toggleDark" />
-          </q-item-section>
-        </q-item>
-      </q-list>
+      <div class="column full-height">
+        <q-list padding class="col">
+          <q-item clickable v-ripple to="/dashboard">
+            <q-item-section avatar>
+              <q-icon name="dashboard" />
+            </q-item-section>
+            <q-item-section>Dashboard</q-item-section>
+          </q-item>
+          <q-item clickable v-ripple to="/ventas">
+            <q-item-section avatar>
+              <q-icon name="point_of_sale" />
+            </q-item-section>
+            <q-item-section>Ventas</q-item-section>
+          </q-item>
+          <q-item clickable v-ripple to="/inventario">
+            <q-item-section avatar>
+              <q-icon name="inventory_2" />
+            </q-item-section>
+            <q-item-section>Inventario</q-item-section>
+          </q-item>
+          <q-item clickable v-ripple to="/clientes">
+            <q-item-section avatar>
+              <q-icon name="people" />
+            </q-item-section>
+            <q-item-section>Clientes</q-item-section>
+          </q-item>
+          <q-item clickable v-ripple to="/usuarios">
+            <q-item-section avatar>
+              <q-icon name="manage_accounts" />
+            </q-item-section>
+            <q-item-section>Usuarios</q-item-section>
+          </q-item>
+          <q-separator spaced />
+          <q-item tag="label" v-ripple>
+            <q-item-section avatar>
+              <q-icon name="dark_mode" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Tema oscuro</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-toggle v-model="darkMode" @update:model-value="toggleDark" />
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-ripple @click="logout">
+            <q-item-section avatar>
+              <q-icon name="logout" />
+            </q-item-section>
+            <q-item-section>Salir de PV</q-item-section>
+          </q-item>
+        </q-list>
+      </div>
     </q-drawer>
 
     <q-page-container>
