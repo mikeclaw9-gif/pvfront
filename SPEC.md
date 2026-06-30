@@ -52,9 +52,9 @@ pventafront/
     ├── components/
     │   └── BackendStatusIndicator.vue
     ├── css/
-    │   └── app.scss            # Global styles
+    │   └── app.scss            # Global styles + tema Consola SCSS
     ├── layouts/
-    │   └── MainLayout.vue      # Shell: drawer nav, dark mode, logout
+    │   └── MainLayout.vue      # Shell: drawer nav, temas, logout
     ├── pages/
     │   ├── LoginPage.vue
     │   ├── DashboardPage.vue
@@ -136,18 +136,40 @@ Composition API (`<script setup lang="ts">`). Consumen stores o API directa.
 
 ---
 
-## 6. Módulos Funcionales
+## 6. Sistema de Temas
 
-### 6.1 LoginPage
+### 6.1 Temas disponibles
+
+4 temas seleccionables desde el menú lateral (ícono `palette`), cada uno con variante claro y oscuro:
+
+| Tema | Claro (primario) | Oscuro (primario) |
+|------|------------------|--------------------|
+| **Predeterminado** | Azul `#1976D2` | Azul claro `#64B5F6` |
+| **Oceánico** | Teal `#00695C` | Teal claro `#26A69A` |
+| **Esmeralda** | Verde `#1B5E20` | Verde `#4CAF50` |
+| **Consola** | Naranja `#BF360C` + tipografía monospace | Verde neón `#00FF41` sobre fondo `#0a0a0a` + monospace |
+
+### 6.2 Implementación
+
+- Las paletas se definen en `MainLayout.vue` como un array de objetos `Theme`
+- Al seleccionar, se aplican CSS custom properties en `:root` (`--q-primary`, `--q-secondary`, etc.)
+- Tema y modo oscuro persisten en `LocalStorage('selectedTheme', 'darkMode')`
+- `app.scss` define estilos específicos por tema (fondo oscuro Consola `#0a0a0a`, fondo Oceánico `#0d1b2a`, etc.)
+
+---
+
+## 7. Módulos Funcionales
+
+### 7.1 LoginPage
 - Formulario email + password
 - Valida contra backend
 - Redirige a `/dashboard` si ya autenticado
 
-### 6.2 DashboardPage
+### 7.2 DashboardPage
 - Grid de tarjetas de acceso rápido a cada módulo
 - Cards con icono + texto
 
-### 6.3 VentasPage
+### 7.3 VentasPage
 - Módulo POS con:
   - Input de código de barras + botón escáner
   - Tabla de carrito dinámico
@@ -157,27 +179,27 @@ Composition API (`<script setup lang="ts">`). Consumen stores o API directa.
 - Escáner: intent ZXing en Android, fallback cámara/galería + BarcodeDetector/html5-qrcode
 - Guarda carrito en sessionStorage al abrir escáner externo
 
-### 6.4 InventarioPage
+### 7.4 InventarioPage
 - CRUD completo de productos (codigo, nombre, precioCompra, precioVenta, existencia, pesado)
 - Diálogo de escáner de código de barras (cámara/galería)
 - Estado `activo`/`inactivo` toggle
 - Paginación
 
-### 6.5 ClientesPage
+### 7.5 ClientesPage
 - CRUD de clientes (nombre, apellido, email, teléfono, dirección, documento, crédito)
 - Paginación
 
-### 6.6 UsuariosPage
+### 7.6 UsuariosPage
 - CRUD de usuarios (solo admin)
 - Roles: ROLE_ADMIN, ROLE_USER, ROLE_VENDEDOR
 - Paginación
 
-### 6.7 GastosPage
+### 7.7 GastosPage
 - CRUD de gastos (descripción, monto, fechaGasto, categoria, metodoPago, observación)
 - Filtros: texto, fechas, montos, estado
 - Exportación PDF
 
-### 6.8 ReportesPage
+### 7.8 ReportesPage
 - 7 tipos: Ventas, Stock, Productos, Gastos, Dashboard, Cortes de Caja, Clientes
 - Filtros dinámicos por tipo (fechas, texto, número, selects)
 - Formato respuesta backend: `{ titulo, columnas[], filas[], tipoGrafico?, graficoNombre? }`
@@ -193,9 +215,9 @@ Composition API (`<script setup lang="ts">`). Consumen stores o API directa.
 
 ---
 
-## 7. API de Reportes
+## 8. API de Reportes
 
-### 7.1 Endpoints
+### 8.1 Endpoints
 
 | Endpoint | operationId | Filtros |
 |----------|-------------|---------|
@@ -207,12 +229,12 @@ Composition API (`<script setup lang="ts">`). Consumen stores o API directa.
 | `GET /reportes/cortes-caja` | reporteCortes | fechaDesde, fechaHasta |
 | `GET /reportes/clientes` | reporteClientes | fechaDesde, fechaHasta, limite |
 
-### 7.2 Parámetros comunes
+### 8.2 Parámetros comunes
 
 - `filter` (string, opcional): JSON string con filtros. Ej: `{"fechaDesde":"2026-06-29","fechaHasta":"2026-06-29"}`
 - `formato` (string, opcional, default: `"JSON"`): `JSON | EXCEL | PDF | PRINT`
 
-### 7.3 Formato de respuesta (JSON)
+### 8.3 Formato de respuesta (JSON)
 
 ```json
 {
@@ -228,7 +250,7 @@ Composition API (`<script setup lang="ts">`). Consumen stores o API directa.
 
 ---
 
-## 8. Escáner de Código de Barras
+## 9. Escáner de Código de Barras
 
 ### Estrategia
 1. **Android**: intent URL `intent://scan/#Intent;...;end` abre app ZXing
@@ -246,7 +268,7 @@ Composition API (`<script setup lang="ts">`). Consumen stores o API directa.
 
 ---
 
-## 9. Exportaciones
+## 10. Exportaciones
 
 ### JSON
 ```typescript
@@ -274,7 +296,7 @@ Imprime la página actual (reporte en pantalla).
 
 ---
 
-## 10. Configuración
+## 11. Configuración
 
 ### quasar.config.js
 
@@ -305,7 +327,7 @@ framework: {
 
 ---
 
-## 11. Convenciones de Código
+## 12. Convenciones de Código
 
 - **Sin comentarios** en código de producción
 - **Sin librerías de UI** adicionales a Quasar
@@ -317,7 +339,7 @@ framework: {
 
 ---
 
-## 12. Backend API (Java Spring Boot)
+## 13. Backend API (Java Spring Boot)
 
 - URL base: `http://localhost:8090/api`
 - Autenticación: JWT Bearer token

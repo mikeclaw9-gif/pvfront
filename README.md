@@ -22,6 +22,7 @@ Quasar 2 · Vue 3.5 · Pinia 2 · Vue Router 4 · Axios · TypeScript 5.5 · SCS
 - **Usuarios** — CRUD de usuarios (admin)
 - **Gastos** — CRUD de gastos con filtros e impresión PDF
 - **Reportes** — 7 tipos de reportes con filtros, gráficas (Chart.js), exportación a JSON/Excel/PDF/Impresión
+- **Temas** — 4 temas (Predeterminado, Oceánico, Esmeralda, Consola) con variante claro/oscuro
 
 ## API
 
