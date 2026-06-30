@@ -4,30 +4,39 @@ export interface ClienteRequest {
   nombre: string;
   apellido: string;
   email: string;
+  direccion: string;
   telefono?: string;
-  direccion?: string;
+  credito?: number;
+  activo?: boolean;
   documento?: string;
 }
 
 export interface ClienteResponse {
-  id: string;
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+  activo: boolean;
   nombre: string;
   apellido: string;
-  email: string;
-  telefono: string;
   direccion: string;
+  telefono: string;
+  email: string;
+  credito: number;
+  eliminado: boolean;
   documento: string;
-  activo: boolean;
-  fechaCreacion: string;
-  fechaModificacion: string;
 }
 
 export interface PageResponse<T> {
   content: T[];
+  page: number;
+  size: number;
   totalElements: number;
   totalPages: number;
-  size: number;
-  number: number;
+  last: boolean;
+  first: boolean;
+  empty: boolean;
 }
 
 export interface ListarParams {
@@ -41,7 +50,7 @@ export function listarClientes(params?: ListarParams) {
   return api.get<PageResponse<ClienteResponse>>('/clientes', { params });
 }
 
-export function obtenerCliente(id: string) {
+export function obtenerCliente(id: number) {
   return api.get<ClienteResponse>(`/clientes/${id}`);
 }
 
@@ -53,14 +62,14 @@ export function crearCliente(data: ClienteRequest) {
   return api.post<ClienteResponse>('/clientes', data);
 }
 
-export function actualizarCliente(id: string, data: ClienteRequest) {
+export function actualizarCliente(id: number, data: ClienteRequest) {
   return api.put<ClienteResponse>(`/clientes/${id}`, data);
 }
 
-export function eliminarCliente(id: string) {
+export function eliminarCliente(id: number) {
   return api.delete<void>(`/clientes/${id}`);
 }
 
-export function toggleActivo(id: string) {
+export function toggleActivo(id: number) {
   return api.patch<ClienteResponse>(`/clientes/${id}/toggle-activo`);
 }

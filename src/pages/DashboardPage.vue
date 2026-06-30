@@ -20,6 +20,24 @@
           </q-card-section>
         </q-card>
       </div>
+      <div class="col-xs-12 col-sm-6">
+        <q-card clickable v-ripple to="/gastos" class="cursor-pointer">
+          <q-card-section class="text-center">
+            <q-icon name="payments" size="64px" color="primary" />
+            <div class="text-h6 q-mt-sm">Gastos</div>
+            <div class="text-caption text-grey">Controla los gastos</div>
+          </q-card-section>
+        </q-card>
+      </div>
+      <div class="col-xs-12 col-sm-6">
+        <q-card clickable v-ripple to="/reportes" class="cursor-pointer">
+          <q-card-section class="text-center">
+            <q-icon name="bar_chart" size="64px" color="primary" />
+            <div class="text-h6 q-mt-sm">Reportes</div>
+            <div class="text-caption text-grey">Analiza tus datos</div>
+          </q-card-section>
+        </q-card>
+      </div>
     </div>
   </div>
 </template>

@@ -40,6 +40,18 @@
             </q-item-section>
             <q-item-section>Clientes</q-item-section>
           </q-item>
+          <q-item clickable v-ripple to="/gastos">
+            <q-item-section avatar>
+              <q-icon name="payments" />
+            </q-item-section>
+            <q-item-section>Gastos</q-item-section>
+          </q-item>
+          <q-item clickable v-ripple to="/reportes">
+            <q-item-section avatar>
+              <q-icon name="bar_chart" />
+            </q-item-section>
+            <q-item-section>Reportes</q-item-section>
+          </q-item>
           <q-item clickable v-ripple to="/usuarios">
             <q-item-section avatar>
               <q-icon name="manage_accounts" />

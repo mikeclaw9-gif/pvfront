@@ -39,8 +39,12 @@ export function generarPdf(
   const rows = datos.map((item) =>
     columnas.map((c) => {
       const val = item[c.dataKey];
-      if (c.dataKey === 'precioCompra' || c.dataKey === 'precioVenta') {
+      if (c.dataKey === 'precioCompra' || c.dataKey === 'precioVenta' || c.dataKey === 'monto') {
         return `$ ${Number(val).toFixed(2)}`;
+      }
+      if (c.dataKey === 'fechaGasto') {
+        const d = new Date(String(val));
+        return isNaN(d.getTime()) ? String(val ?? '') : d.toLocaleDateString('es-MX');
       }
       if (c.dataKey === 'activo') {
         return val ? 'Activo' : 'Inactivo';

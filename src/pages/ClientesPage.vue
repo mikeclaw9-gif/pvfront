@@ -113,7 +113,7 @@ const form = ref<ClienteRequest>({
   direccion: '',
   documento: '',
 });
-const editandoId = ref<string | null>(null);
+const editandoId = ref<number | null>(null);
 
 const filteredRows = computed(() => {
   let rows = store.clientes;

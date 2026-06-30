@@ -15,6 +15,11 @@ export interface VentaRequest {
 
 export interface DetalleVentaResponse {
   id: number;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+  activo: boolean;
   productoId: number;
   productoCodigo: string;
   productoNombre: string;
@@ -29,6 +34,11 @@ export type EstadoVenta = 'PENDIENTE' | 'COMPLETADA' | 'CANCELADA';
 
 export interface VentaResponse {
   id: number;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+  activo: boolean;
   fecha: string;
   total: number;
   descuentoPorcentaje: number;
@@ -69,10 +79,13 @@ export interface TicketResponse {
 
 export interface PageResponse<T> {
   content: T[];
+  page: number;
+  size: number;
   totalElements: number;
   totalPages: number;
-  size: number;
-  number: number;
+  last: boolean;
+  first: boolean;
+  empty: boolean;
 }
 
 export interface ListarVentasParams {
@@ -106,8 +119,8 @@ export function eliminarDetalle(ventaId: number, detalleId: number) {
   return api.delete(`/ventas/${ventaId}/detalles/${detalleId}`);
 }
 
-export function finalizarVenta(id: number) {
-  return api.put<VentaResponse>(`/ventas/${id}/finalizar`);
+export function finalizarVenta(id: number, data: VentaResponse) {
+  return api.put<VentaResponse>(`/ventas/${id}/finalizar`, data);
 }
 
 export function anularVenta(id: number) {

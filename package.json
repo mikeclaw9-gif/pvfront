@@ -10,6 +10,8 @@
   "dependencies": {
     "@quasar/extras": "^1.16.0",
     "axios": "^1.7.0",
+    "chart.js": "^4.5.1",
+    "html5-qrcode": "^2.3.8",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "pinia": "^2.2.0",

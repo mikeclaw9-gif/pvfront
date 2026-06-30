@@ -36,7 +36,7 @@ export const useClienteStore = defineStore('cliente', {
         this.clientes = data.content;
         this.totalElements = data.totalElements;
         this.totalPages = data.totalPages;
-        this.page = data.number;
+        this.page = data.page;
         this.size = data.size;
       } finally {
         this.loading = false;
@@ -46,15 +46,15 @@ export const useClienteStore = defineStore('cliente', {
       await crearCliente(data);
       await this.listar({ page: this.page, size: this.size });
     },
-    async actualizar(id: string, data: ClienteRequest) {
+    async actualizar(id: number, data: ClienteRequest) {
       await actualizarCliente(id, data);
       await this.listar({ page: this.page, size: this.size });
     },
-    async eliminar(id: string) {
+    async eliminar(id: number) {
       await eliminarCliente(id);
       await this.listar({ page: this.page, size: this.size });
     },
-    async toggleActivo(id: string) {
+    async toggleActivo(id: number) {
       await toggleActivo(id);
       await this.listar({ page: this.page, size: this.size });
     },

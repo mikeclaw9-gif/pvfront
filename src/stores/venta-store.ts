@@ -34,7 +34,7 @@ export const useVentaStore = defineStore('venta', {
         this.ventas = data.content;
         this.totalElements = data.totalElements;
         this.totalPages = data.totalPages;
-        this.page = data.number;
+        this.page = data.page;
         this.size = data.size;
       } finally {
         this.loading = false;

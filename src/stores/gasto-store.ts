@@ -1,17 +1,17 @@
 import { defineStore } from 'pinia';
 import {
-  listarUsuarios,
-  crearUsuario,
-  actualizarUsuario,
-  eliminarUsuario,
-  toggleActivo,
-  type UsuarioRequest,
-  type UsuarioResponse,
+  listarGastos,
+  crearGasto,
+  actualizarGasto,
+  eliminarGasto,
+  toggleActivoGasto,
+  type GastoRequest,
+  type GastoResponse,
   type ListarParams,
-} from '../api/usuario.api';
+} from '../api/gasto.api';
 
-interface UsuarioState {
-  usuarios: UsuarioResponse[];
+interface GastoState {
+  gastos: GastoResponse[];
   loading: boolean;
   page: number;
   size: number;
@@ -19,9 +19,9 @@ interface UsuarioState {
   totalPages: number;
 }
 
-export const useUsuarioStore = defineStore('usuario', {
-  state: (): UsuarioState => ({
-    usuarios: [],
+export const useGastoStore = defineStore('gasto', {
+  state: (): GastoState => ({
+    gastos: [],
     loading: false,
     page: 0,
     size: 10,
@@ -32,8 +32,8 @@ export const useUsuarioStore = defineStore('usuario', {
     async listar(params?: ListarParams) {
       this.loading = true;
       try {
-        const { data } = await listarUsuarios(params);
-        this.usuarios = data.content;
+        const { data } = await listarGastos(params);
+        this.gastos = data.content;
         this.totalElements = data.totalElements;
         this.totalPages = data.totalPages;
         this.page = data.page;
@@ -42,20 +42,20 @@ export const useUsuarioStore = defineStore('usuario', {
         this.loading = false;
       }
     },
-    async crear(data: UsuarioRequest) {
-      await crearUsuario(data);
+    async crear(data: GastoRequest) {
+      await crearGasto(data);
       await this.listar({ page: this.page, size: this.size });
     },
-    async actualizar(id: number, data: UsuarioRequest) {
-      await actualizarUsuario(id, data);
+    async actualizar(id: number, data: GastoRequest) {
+      await actualizarGasto(id, data);
       await this.listar({ page: this.page, size: this.size });
     },
     async eliminar(id: number) {
-      await eliminarUsuario(id);
+      await eliminarGasto(id);
       await this.listar({ page: this.page, size: this.size });
     },
     async toggleActivo(id: number) {
-      await toggleActivo(id);
+      await toggleActivoGasto(id);
       await this.listar({ page: this.page, size: this.size });
     },
   },

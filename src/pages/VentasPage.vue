@@ -1,225 +1,200 @@
 <template>
-  <div class="q-pa-md full-height">
-    <div class="text-h5 q-mb-md">Ventas</div>
-
-    <div class="row q-col-gutter-md">
-      <div class="col-12 col-md-7">
-        <q-card>
-          <q-card-section class="q-pa-sm">
-            <div class="row q-gutter-sm items-center">
-              <q-input
-                v-model="busqueda"
-                label="Buscar por código o nombre"
-                outlined
-                dense
-                class="col"
-                @keyup.enter="buscarProductos"
-                :debounce="300"
-              />
-              <q-btn icon="search" color="primary" @click="buscarProductos" />
-              <q-btn label="Todos" flat color="primary" @click="cargarTodos" />
-            </div>
-          </q-card-section>
-        </q-card>
-
-        <q-card class="q-mt-md" v-if="productos.length > 0">
-          <q-card-section class="q-pa-none">
-            <q-list separator>
-              <q-item v-for="prod in productos" :key="prod.id" v-ripple>
-                <q-item-section>
-                  <q-item-label>{{ prod.codigo }} — {{ prod.nombre }}</q-item-label>
-                  <q-item-label caption>
-                    ${{ prod.precioVenta.toFixed(2) }}
-                    <q-badge v-if="prod.pesado" color="orange" class="q-ml-sm">Por kilo</q-badge>
-                    <q-badge v-if="prod.existencia <= 0" color="red" class="q-ml-sm">Sin stock</q-badge>
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <q-btn
-                    icon="add_shopping_cart"
-                    color="primary"
-                    dense
-                    :disable="prod.existencia <= 0"
-                    @click="agregarAlCarrito(prod)"
-                  />
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-card-section>
-        </q-card>
-
-        <q-card class="q-mt-md" v-else>
-          <q-card-section class="text-center text-grey">
-            <q-icon name="search" size="48px" />
-            <div class="q-mt-sm">Busque productos para agregar a la venta</div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <div class="col-12 col-md-5">
-        <q-card>
-          <q-card-section class="q-pa-sm">
-            <div class="row items-center q-gutter-x-sm">
-              <q-icon name="point_of_sale" size="sm" />
-              <span class="text-subtitle1">Venta actual</span>
-              <q-space />
-              <q-btn
-                :label="clienteSeleccionado ? clienteSeleccionado.nombre : 'Sin cliente'"
-                flat
-                dense
-                color="primary"
-                @click="seleccionarCliente"
-              >
-                <q-icon :name="clienteSeleccionado ? 'person' : 'person_add'" class="q-mr-xs" />
-              </q-btn>
-            </div>
-          </q-card-section>
-
-          <q-separator />
-
-          <q-card-section class="q-pa-none" style="min-height: 200px; max-height: 350px; overflow-y: auto">
-            <q-list separator v-if="carrito.length > 0">
-              <q-item v-for="(item, index) in carrito" :key="index">
-                <q-item-section top class="col-5">
-                  <q-item-label class="text-weight-medium">{{ item.nombre }}</q-item-label>
-                  <q-item-label caption>
-                    <q-badge v-if="item.pesado" color="orange" class="q-mr-xs">kg</q-badge>
-                    ${{ item.precioUnitario.toFixed(2) }}
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section top class="col-3">
-                  <q-input
-                    v-model.number="item.cantidad"
-                    type="number"
-                    :step="item.pesado ? 0.1 : 1"
-                    :min="0.001"
-                    dense
-                    outlined
-                    size="sm"
-                    label="Cant"
-                    @update:model-value="recalcular"
-                  />
-                </q-item-section>
-                <q-item-section top class="col-2">
-                  <q-input
-                    v-model.number="item.descuentoPorcentaje"
-                    type="number"
-                    :min="0"
-                    :max="100"
-                    dense
-                    outlined
-                    size="sm"
-                    label="Desc %"
-                    @update:model-value="recalcular"
-                  />
-                </q-item-section>
-                <q-item-section top side class="col-2 text-right">
-                  <div class="text-weight-medium">${{ item.subtotal.toFixed(2) }}</div>
-                  <q-btn flat dense icon="delete" color="negative" size="sm" @click="eliminarDelCarrito(index)" />
-                </q-item-section>
-              </q-item>
-            </q-list>
-            <div v-else class="text-center text-grey q-pa-xl">
-              <q-icon name="shopping_cart" size="40px" />
-              <div class="q-mt-sm">Carrito vacío</div>
-            </div>
-          </q-card-section>
-
-          <q-separator />
-
-          <q-card-section>
-            <div class="row items-center q-gutter-y-sm">
-              <div class="col-12 row items-center">
-                <span class="col-6">Subtotal:</span>
-                <span class="col-6 text-right text-weight-medium">${{ subtotal.toFixed(2) }}</span>
-              </div>
-              <div class="col-12 row items-center">
-                <span class="col-6">Descuento global:</span>
-                <div class="col-6 row items-center justify-end q-gutter-xs">
-                  <q-input
-                    v-model.number="descuentoGlobal"
-                    type="number"
-                    :min="0"
-                    :max="100"
-                    dense
-                    outlined
-                    size="sm"
-                    style="width: 70px"
-                    suffix="%"
-                  />
-                </div>
-              </div>
-              <q-separator class="col-12" />
-              <div class="col-12 row items-center text-h6">
-                <span class="col-6">TOTAL:</span>
-                <span class="col-6 text-right text-primary">${{ total.toFixed(2) }}</span>
-              </div>
-            </div>
-          </q-card-section>
-
-          <q-card-actions align="right" class="q-pa-md">
-            <q-btn
-              label="Finalizar venta"
-              color="positive"
-              icon="check_circle"
-              :disable="carrito.length === 0"
-              @click="finalizar"
-            />
-          </q-card-actions>
-        </q-card>
+  <div class="pos-screen column full-height">
+    <!-- Header: escáner de código de barras -->
+    <div class="pos-header bg-primary text-white q-py-xs q-px-md">
+      <div class="row items-center q-gutter-x-sm">
+        <q-icon name="qr_code_scanner" size="sm" />
+        <q-input
+          ref="barcodeRef"
+          v-model="codigoBarra"
+          placeholder="Código de barras"
+          dark
+          dense
+          borderless
+          class="col barcode-input"
+          hide-bottom-space
+          input-class="text-body1 text-white text-center"
+          @keyup.enter="procesarCodigoBarra"
+        />
+        <q-btn flat dense round icon="search" size="sm" @click="abrirBusquedaManual" />
+        <q-btn flat dense round icon="qr_code_scanner" size="sm" @click="abrirDialogoScanner" />
       </div>
     </div>
 
+    <!-- Carrito (vista tipo ticket / tabla) -->
+    <div class="pos-cart col scroll">
+      <div v-if="carrito.length > 0" class="cart-table">
+        <div class="cart-header">
+          <span class="col-cant">CANT</span>
+          <span class="col-pres">PRES</span>
+          <span class="col-desc">DESC</span>
+          <span class="col-precio">PU</span>
+          <span class="col-desc-porc">%DESC</span>
+          <span class="col-monto">MONTO</span>
+          <span class="col-actions"></span>
+        </div>
+        <div v-for="(item, index) in carrito" :key="index" class="cart-row">
+          <span class="col-cant">
+            <q-btn dense flat round icon="remove" size="xs" color="grey-6" @click="disminuirCantidad(index)" />
+            <span class="cant-num cursor-pointer" @click="editarCantidad(index)">{{ item.cantidad }}</span>
+            <q-btn dense flat round icon="add" size="xs" color="primary" @click="aumentarCantidad(index)" />
+          </span>
+          <span class="col-pres">{{ item.presentacion }}</span>
+          <span class="col-desc">{{ item.nombre }}</span>
+          <span class="col-precio">${{ item.precioUnitario.toFixed(2) }}</span>
+          <span class="col-desc-porc">
+            <q-input
+              v-model.number="item.descuentoPorcentaje"
+              type="number"
+              min="0"
+              max="100"
+              dense
+              borderless
+              hide-bottom-space
+              input-class="text-center desc-input"
+              style="max-width: 36px"
+              @update:model-value="recalcular"
+            />
+          </span>
+          <span class="col-monto">${{ item.subtotal.toFixed(2) }}</span>
+          <span class="col-actions">
+            <q-btn flat dense round icon="close" size="xs" color="negative" @click="eliminarDelCarrito(index)" />
+          </span>
+        </div>
+      </div>
+
+      <!-- Estado vacío -->
+      <div v-else class="empty-state column items-center justify-center text-grey-5">
+        <q-icon name="point_of_sale" size="72px" />
+        <div class="text-body1 q-mt-sm text-weight-medium">Escanee un producto</div>
+        <div class="text-caption">o use el buscador manual</div>
+      </div>
+    </div>
+
+    <!-- Footer: total + acciones -->
+    <div class="pos-footer bg-white">
+      <q-separator />
+      <div class="q-px-md q-py-xs row items-center">
+        <q-btn flat dense no-caps icon="person" size="sm" color="primary" @click="seleccionarCliente">
+          <span class="q-ml-xs text-caption">{{ clienteSeleccionado ? clienteSeleccionado.nombre : 'Sin cliente' }}</span>
+        </q-btn>
+        <q-space />
+        <div class="text-caption text-grey-6">{{ carrito.length }} artículo{{ carrito.length !== 1 ? 's' : '' }}</div>
+      </div>
+      <q-separator />
+      <div class="q-px-md q-py-sm row items-baseline">
+        <div class="col text-subtitle1">Total</div>
+        <div class="col text-right text-h5 text-primary text-weight-bold">${{ total.toFixed(2) }}</div>
+      </div>
+      <q-btn
+        :disable="carrito.length === 0"
+        label="Cobrar"
+        color="positive"
+        icon="check_circle"
+        class="full-width"
+        size="lg"
+        no-caps
+        @click="finalizar"
+      />
+    </div>
+
+    <!-- Diálogo: cantidad para productos pesados -->
     <q-dialog v-model="dialogoCantidad" persistent>
-      <q-card style="min-width: 350px">
-        <q-card-section>
+      <q-card style="min-width: 300px">
+        <q-card-section class="text-center">
           <div class="text-h6">{{ productoSeleccionado?.nombre }}</div>
+          <div class="text-caption text-grey">{{ productoSeleccionado?.codigo }}</div>
         </q-card-section>
         <q-card-section>
-          <div class="q-gutter-y-md">
-            <q-input
-              v-model.number="cantidadInput"
-              type="number"
-              :step="productoSeleccionado?.pesado ? 0.1 : 1"
-              :min="0.001"
-              label="Cantidad"
-              outlined
-              autofocus
-              :suffix="productoSeleccionado?.pesado ? 'kg' : ''"
-            />
-            <q-input
-              v-model.number="precioInput"
-              type="number"
-              :min="0"
-              label="Precio unitario"
-              outlined
-              :suffix="'$'"
-            />
-            <q-input
-              v-model.number="descuentoItemInput"
-              type="number"
-              :min="0"
-              :max="100"
-              label="Descuento (%)"
-              outlined
-              suffix="%"
-            />
-          </div>
+          <q-input
+            v-model.number="cantidadInput"
+            type="number"
+            :step="productoSeleccionado?.pesado ? 0.1 : 1"
+            :min="0.001"
+            label="Cantidad"
+            outlined
+            autofocus
+            :suffix="productoSeleccionado?.pesado ? 'kg' : ''"
+            class="text-h5 text-center"
+          />
         </q-card-section>
-        <q-card-actions align="right">
+        <q-card-actions align="around" class="q-pb-md">
           <q-btn label="Cancelar" flat color="primary" v-close-popup />
           <q-btn label="Agregar" color="primary" @click="confirmarAgregar" />
         </q-card-actions>
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="dialogoCliente">
-      <q-card style="min-width: 400px">
+    <!-- Diálogo: buscar productos manualmente -->
+    <q-dialog v-model="dialogoBusqueda" full-width position="top">
+      <q-card>
+        <q-card-section class="q-pb-none">
+          <q-input
+            v-model="busquedaManual"
+            label="Buscar por código o nombre"
+            outlined
+            dense
+            autofocus
+            clearable
+            @keyup.enter="buscarProductosManual"
+          >
+            <template v-slot:append>
+              <q-btn flat dense round icon="search" color="primary" @click="buscarProductosManual" />
+            </template>
+          </q-input>
+        </q-card-section>
+        <q-card-section class="q-pa-none" style="max-height: 50vh; overflow-y: auto">
+          <q-list separator v-if="productosBusqueda.length > 0">
+            <q-item
+              v-for="prod in productosBusqueda"
+              :key="prod.id"
+              clickable
+              v-ripple
+              @click="seleccionarProductoBusqueda(prod)"
+            >
+              <q-item-section>
+                <q-item-label>
+                  <span class="text-weight-medium">{{ prod.codigo }}</span>
+                  — {{ prod.nombre }}
+                </q-item-label>
+                <q-item-label caption>
+                  ${{ prod.precioVenta.toFixed(2) }}
+                  <q-badge v-if="prod.pesado" color="orange" class="q-ml-xs">kg</q-badge>
+                  <q-badge v-if="prod.existencia <= 0" color="red" class="q-ml-xs">Sin stock</q-badge>
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-btn icon="add_shopping_cart" color="primary" dense round />
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <div v-else-if="busquedaManual.length > 0" class="text-center text-grey q-py-xl">
+            Sin resultados
+          </div>
+          <div v-else class="text-center text-grey q-py-xl text-caption">
+            Escriba código o nombre del producto
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn label="Cerrar" flat color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Diálogo: seleccionar cliente -->
+    <q-dialog v-model="dialogoCliente" position="top">
+      <q-card style="min-width: 320px">
         <q-card-section>
-          <div class="text-h6">Seleccionar cliente</div>
+          <div class="text-h6">Cliente</div>
         </q-card-section>
         <q-card-section>
-          <q-input v-model="busquedaCliente" label="Buscar cliente" outlined dense @keyup.enter="buscarClientes" />
+          <q-input
+            v-model="busquedaCliente"
+            label="Buscar por nombre, email o documento"
+            outlined
+            dense
+            @keyup.enter="buscarClientes"
+          />
           <q-btn label="Buscar" flat color="primary" class="q-mt-sm" @click="buscarClientes" />
           <q-list class="q-mt-sm" v-if="clientesEncontrados.length > 0" separator>
             <q-item
@@ -231,10 +206,10 @@
             >
               <q-item-section>
                 <q-item-label>{{ cli.nombre }} {{ cli.apellido }}</q-item-label>
-                <q-item-label caption>{{ cli.email }} — {{ cli.documento }}</q-item-label>
+                <q-item-label caption>{{ cli.documento }}</q-item-label>
               </q-item-section>
               <q-item-section side>
-                <q-btn icon="check" flat dense color="primary" />
+                <q-icon name="check" color="primary" />
               </q-item-section>
             </q-item>
           </q-list>
@@ -244,11 +219,12 @@
         </q-card-section>
         <q-card-actions align="right">
           <q-btn label="Sin cliente" flat color="primary" @click="asignarCliente(null)" v-close-popup />
-          <q-btn label="Cerrar" flat color="primary" v-close-popup />
+          <q-btn label="Cerrar" flat v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
 
+    <!-- Diálogo: ticket -->
     <q-dialog v-model="dialogoTicket" full-width>
       <q-card>
         <q-card-section class="text-center">
@@ -310,6 +286,7 @@
       </q-card>
     </q-dialog>
 
+    <!-- Diálogo: cargando -->
     <q-dialog v-model="dialogoCargando" persistent>
       <q-card>
         <q-card-section class="row items-center q-gutter-md">
@@ -318,13 +295,35 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <!-- Diálogo: escáner de código de barras -->
+    <q-dialog v-model="scannerVisible" persistent maximized>
+      <q-card class="scanner-card column no-wrap">
+        <q-card-section class="text-center">
+          <div class="text-h6">Escáner de código de barras</div>
+        </q-card-section>
+        <q-card-section class="col column flex-center q-gutter-y-md">
+          <q-btn icon="photo_camera" label="Tomar foto" color="primary" size="lg" class="full-width" @click="capturarCamara" />
+          <q-btn icon="image_search" label="Subir imagen" color="secondary" size="lg" class="full-width" outline @click="subirImagen" />
+          <q-img v-if="vistaPrevia" :src="vistaPrevia" style="max-height: 200px; max-width: 100%" />
+        </q-card-section>
+        <q-card-section v-if="errorScanner" class="text-center text-negative">
+          {{ errorScanner }}
+        </q-card-section>
+        <q-card-actions align="center">
+          <q-btn label="Cancelar" flat color="primary" @click="cerrarScanner" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+    <div id="barcode-scanner-dummy" style="display: none"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Notify } from 'quasar';
-import { listarProductos, type ProductoResponse } from '../api/producto.api';
+import { ref, computed, nextTick, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { Notify, Loading } from 'quasar';
+import { listarProductos, buscarPorCodigo, type ProductoResponse } from '../api/producto.api';
 import { listarClientes, type ClienteResponse } from '../api/cliente.api';
 import { crearVenta, finalizarVenta, obtenerTicket, type TicketResponse } from '../api/venta.api';
 
@@ -332,6 +331,7 @@ interface CarritoItem {
   productoId: number;
   codigo: string;
   nombre: string;
+  presentacion: string;
   cantidad: number;
   precioUnitario: number;
   descuentoPorcentaje: number;
@@ -339,26 +339,35 @@ interface CarritoItem {
   pesado: boolean;
 }
 
-const busqueda = ref('');
-const productos = ref<ProductoResponse[]>([]);
+const route = useRoute();
+const barcodeRef = ref<any>(null);
+const codigoBarra = ref('');
+const scannerVisible = ref(false);
+const vistaPrevia = ref<string | null>(null);
+const errorScanner = ref('');
+
 const carrito = ref<CarritoItem[]>([]);
 const descuentoGlobal = ref(0);
-
 const clienteSeleccionado = ref<ClienteResponse | null>(null);
 
+// Cantidad dialog
 const dialogoCantidad = ref(false);
-const dialogoCliente = ref(false);
-const dialogoTicket = ref(false);
-const dialogoCargando = ref(false);
-
 const productoSeleccionado = ref<ProductoResponse | null>(null);
 const cantidadInput = ref(1);
-const precioInput = ref(0);
-const descuentoItemInput = ref(0);
 
+// Búsqueda manual
+const dialogoBusqueda = ref(false);
+const busquedaManual = ref('');
+const productosBusqueda = ref<ProductoResponse[]>([]);
+
+// Cliente dialog
+const dialogoCliente = ref(false);
 const busquedaCliente = ref('');
 const clientesEncontrados = ref<ClienteResponse[]>([]);
 
+// Ticket
+const dialogoTicket = ref(false);
+const dialogoCargando = ref(false);
 const ticket = ref<TicketResponse | null>(null);
 const ultimaVentaId = ref<number | null>(null);
 
@@ -383,71 +392,201 @@ function formatearFecha(fecha?: string) {
   });
 }
 
+function enfocarBarra() {
+  nextTick(() => barcodeRef.value?.focus());
+}
+
+onMounted(() => {
+  if (route.query.codigo) {
+    const codigo = route.query.codigo as string;
+    const guardado = sessionStorage.getItem('carritoVenta');
+    if (guardado) {
+      try {
+        const data = JSON.parse(guardado);
+        carrito.value = data.carrito || [];
+        clienteSeleccionado.value = data.cliente || null;
+        descuentoGlobal.value = data.descuento || 0;
+      } catch { /* ignore */ }
+      sessionStorage.removeItem('carritoVenta');
+    }
+    codigoBarra.value = codigo;
+    procesarCodigoBarra();
+  }
+});
+
 function recalcular() {
   carrito.value.forEach((item) => {
     item.subtotal = item.cantidad * item.precioUnitario * (1 - item.descuentoPorcentaje / 100);
   });
 }
 
-async function buscarProductos() {
-  if (!busqueda.value.trim()) return;
+// ── Código de barras ──────────────────────────────────────────
+
+async function procesarCodigoBarra() {
+  const codigo = codigoBarra.value.trim();
+  if (!codigo) return;
+  codigoBarra.value = '';
+  enfocarBarra();
   try {
-    const { data } = await listarProductos({ size: 50 });
-    const t = busqueda.value.toLowerCase();
-    productos.value = data.content.filter(
+    const { data: prod } = await buscarPorCodigo(codigo);
+    agregarAlCarrito(prod);
+  } catch {
+    Notify.create({
+      type: 'warning',
+      message: `Producto "${codigo}" no encontrado`,
+      actions: [
+        { label: 'Buscar', color: 'white', handler: () => abrirBusquedaManual(codigo) },
+      ],
+    });
+  }
+}
+
+// ── Agregar al carrito ────────────────────────────────────────
+
+function agregarAlCarrito(prod: ProductoResponse) {
+  if (prod.existencia <= 0) {
+    Notify.create({ type: 'negative', message: `${prod.nombre} — Sin stock` });
+    return;
+  }
+  const existente = carrito.value.find((i) => i.productoId === prod.id);
+  if (existente && !prod.pesado) {
+    existente.cantidad += 1;
+    recalcular();
+    Notify.create({ type: 'positive', message: `${prod.nombre} x${existente.cantidad}`, timeout: 800 });
+    return;
+  }
+  if (prod.pesado) {
+    productoSeleccionado.value = prod;
+    cantidadInput.value = 1;
+    dialogoCantidad.value = true;
+    return;
+  }
+  const subt = prod.precioVenta;
+  carrito.value.push({
+    productoId: prod.id,
+    codigo: prod.codigo,
+    nombre: prod.nombre,
+    presentacion: prod.pesado ? 'KG' : 'PIEZA',
+    cantidad: 1,
+    precioUnitario: prod.precioVenta,
+    descuentoPorcentaje: 0,
+    subtotal: subt,
+    pesado: !!prod.pesado,
+  });
+  Notify.create({ type: 'positive', message: `${prod.nombre} agregado`, timeout: 800 });
+}
+
+function confirmarAgregar() {
+  if (!productoSeleccionado.value || !cantidadInput.value || cantidadInput.value <= 0) return;
+  const prod = productoSeleccionado.value;
+  const subt = cantidadInput.value * prod.precioVenta;
+  const idx = carrito.value.findIndex((i) => i.productoId === prod.id);
+  if (idx >= 0) {
+    carrito.value[idx].cantidad += cantidadInput.value;
+    carrito.value[idx].subtotal = carrito.value[idx].cantidad * carrito.value[idx].precioUnitario;
+  } else {
+    carrito.value.push({
+      productoId: prod.id,
+      codigo: prod.codigo,
+      nombre: prod.nombre,
+      presentacion: 'KG',
+      cantidad: cantidadInput.value,
+      precioUnitario: prod.precioVenta,
+      descuentoPorcentaje: 0,
+      subtotal: subt,
+      pesado: true,
+    });
+  }
+  dialogoCantidad.value = false;
+  Notify.create({ type: 'positive', message: `${prod.nombre} — ${cantidadInput.value} kg`, timeout: 1000 });
+}
+
+// ── Manipular cantidades ──────────────────────────────────────
+
+function aumentarCantidad(index: number) {
+  const item = carrito.value[index];
+  if (item.pesado) {
+    productoSeleccionado.value = {
+      id: String(item.productoId),
+      codigo: item.codigo,
+      nombre: item.nombre,
+      precioVenta: item.precioUnitario,
+      pesado: true,
+      existencia: 9999,
+    } as ProductoResponse;
+    cantidadInput.value = 0.1;
+    dialogoCantidad.value = true;
+    return;
+  }
+  item.cantidad += 1;
+  recalcular();
+}
+
+function disminuirCantidad(index: number) {
+  const item = carrito.value[index];
+  if (item.cantidad <= 1) {
+    eliminarDelCarrito(index);
+    return;
+  }
+  item.cantidad -= 1;
+  recalcular();
+}
+
+function editarCantidad(index: number) {
+  const item = carrito.value[index];
+  if (item.pesado) {
+    productoSeleccionado.value = {
+      id: String(item.productoId),
+      codigo: item.codigo,
+      nombre: item.nombre,
+      precioVenta: item.precioUnitario,
+      pesado: true,
+      existencia: 9999,
+    } as ProductoResponse;
+    cantidadInput.value = item.cantidad;
+    dialogoCantidad.value = true;
+    return;
+  }
+  cantidadInput.value = item.cantidad;
+  // For regular items, simple increment/decrement is enough
+}
+
+function eliminarDelCarrito(index: number) {
+  const removed = carrito.value[index];
+  carrito.value.splice(index, 1);
+  Notify.create({ type: 'info', message: `${removed.nombre} eliminado`, timeout: 800 });
+}
+
+// ── Búsqueda manual ───────────────────────────────────────────
+
+function abrirBusquedaManual(termino?: string) {
+  busquedaManual.value = termino || '';
+  productosBusqueda.value = [];
+  dialogoBusqueda.value = true;
+  if (termino) {
+    setTimeout(() => buscarProductosManual(), 100);
+  }
+}
+
+async function buscarProductosManual() {
+  if (!busquedaManual.value.trim()) return;
+  try {
+    const { data } = await listarProductos({ size: 100 });
+    const t = busquedaManual.value.toLowerCase().trim();
+    productosBusqueda.value = data.content.filter(
       (p) => p.codigo.toLowerCase().includes(t) || p.nombre.toLowerCase().includes(t),
     );
-    if (productos.value.length === 0) {
-      Notify.create({ type: 'info', message: 'No se encontraron productos' });
-    }
   } catch {
     Notify.create({ type: 'negative', message: 'Error al buscar productos' });
   }
 }
 
-async function cargarTodos() {
-  try {
-    const { data } = await listarProductos({ size: 100 });
-    productos.value = data.content;
-  } catch {
-    Notify.create({ type: 'negative', message: 'Error al cargar productos' });
-  }
+function seleccionarProductoBusqueda(prod: ProductoResponse) {
+  dialogoBusqueda.value = false;
+  agregarAlCarrito(prod);
 }
 
-function agregarAlCarrito(prod: ProductoResponse) {
-  productoSeleccionado.value = prod;
-  cantidadInput.value = prod.pesado ? 1 : 1;
-  precioInput.value = prod.precioVenta;
-  descuentoItemInput.value = 0;
-  dialogoCantidad.value = true;
-}
-
-function confirmarAgregar() {
-  if (!productoSeleccionado.value) return;
-  const prod = productoSeleccionado.value;
-  const idx = carrito.value.findIndex((i) => i.productoId === Number(prod.id));
-  const subt = cantidadInput.value * precioInput.value * (1 - descuentoItemInput.value / 100);
-  if (idx >= 0) {
-    carrito.value[idx].cantidad += cantidadInput.value;
-    carrito.value[idx].subtotal = carrito.value[idx].cantidad * carrito.value[idx].precioUnitario * (1 - carrito.value[idx].descuentoPorcentaje / 100);
-  } else {
-    carrito.value.push({
-      productoId: Number(prod.id),
-      codigo: prod.codigo,
-      nombre: prod.nombre,
-      cantidad: cantidadInput.value,
-      precioUnitario: precioInput.value,
-      descuentoPorcentaje: descuentoItemInput.value,
-      subtotal: subt,
-      pesado: !!prod.pesado,
-    });
-  }
-  dialogoCantidad.value = false;
-}
-
-function eliminarDelCarrito(index: number) {
-  carrito.value.splice(index, 1);
-}
+// ── Cliente ───────────────────────────────────────────────────
 
 function seleccionarCliente() {
   busquedaCliente.value = '';
@@ -480,6 +619,114 @@ function asignarCliente(cli: ClienteResponse | null) {
   dialogoCliente.value = false;
 }
 
+// ── Escáner de código de barras ──────────────────────────
+
+function abrirDialogoScanner() {
+  const { href } = window.location;
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    sessionStorage.setItem('carritoVenta', JSON.stringify({
+      carrito: carrito.value,
+      cliente: clienteSeleccionado.value,
+      descuento: descuentoGlobal.value,
+    }));
+    const base = window.location.origin + window.location.pathname.replace(/\/+$/, '');
+    const ret = encodeURIComponent(base + '/#/ventas?codigo={CODE}');
+    const intentUrl = `intent://scan?ret=${ret}#Intent;scheme=zxing;package=com.google.zxing.client.android;end`;
+    window.location.href = intentUrl;
+    setTimeout(() => {
+      scannerVisible.value = true;
+      errorScanner.value = '';
+      vistaPrevia.value = null;
+    }, 5000);
+  } else {
+    scannerVisible.value = true;
+    errorScanner.value = '';
+    vistaPrevia.value = null;
+  }
+}
+
+function cerrarScanner() {
+  scannerVisible.value = false;
+}
+
+function capturarCamara() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  (input as any).capture = 'environment';
+  input.style.display = 'none';
+  input.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) procesarImagen(file);
+    input.remove();
+  });
+  document.body.appendChild(input);
+  input.click();
+}
+
+function subirImagen() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
+  input.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) procesarImagen(file);
+    input.remove();
+  });
+  document.body.appendChild(input);
+  input.click();
+}
+
+async function procesarImagen(file: File) {
+  vistaPrevia.value = URL.createObjectURL(file);
+  errorScanner.value = '';
+  Loading.show({ message: 'Analizando código de barras...' });
+  try {
+    const code = await detectarCodigo(file);
+    Loading.hide();
+    if (code) {
+      scannerVisible.value = false;
+      codigoBarra.value = code;
+      await nextTick();
+      procesarCodigoBarra();
+      Notify.create({ type: 'positive', message: 'Código: ' + code });
+    } else {
+      errorScanner.value = 'No se detectó ningún código de barras en la imagen.';
+      Notify.create({ type: 'warning', message: 'Código no detectado.' });
+    }
+  } catch (err: any) {
+    Loading.hide();
+    errorScanner.value = err.message || 'Error al procesar la imagen';
+    Notify.create({ type: 'negative', message: errorScanner.value });
+  }
+}
+
+async function detectarCodigo(file: File): Promise<string | null> {
+  const image = new Image();
+  image.src = URL.createObjectURL(file);
+  await image.decode();
+  if ('BarcodeDetector' in window) {
+    try {
+      const detector = new (window as any).BarcodeDetector({
+        formats: ['ean_13', 'ean_8', 'code_128', 'code_39', 'code_93', 'codabar', 'upc_a', 'upc_e', 'itf', 'qr_code', 'data_matrix', 'pdf417', 'aztec'],
+      });
+      const resultados = await detector.detect(image);
+      if (resultados.length > 0) return resultados[0].rawValue;
+    } catch { /* fallback */ }
+  }
+  const { Html5Qrcode } = await import('html5-qrcode');
+  const scanner = new Html5Qrcode('barcode-scanner-dummy');
+  try {
+    const code = await scanner.scanFile(file, false);
+    return code;
+  } finally {
+    scanner.clear();
+  }
+}
+
+// ── Finalizar venta ───────────────────────────────────────────
+
 async function finalizar() {
   if (carrito.value.length === 0) return;
   dialogoCargando.value = true;
@@ -495,11 +742,11 @@ async function finalizar() {
       descuentoPorcentaje: descuentoGlobal.value > 0 ? descuentoGlobal.value : undefined,
     };
     if (clienteSeleccionado.value) {
-      payload.clienteId = Number(clienteSeleccionado.value.id);
+      payload.clienteId = clienteSeleccionado.value.id;
     }
     const { data: ventaCreada } = await crearVenta(payload);
     ultimaVentaId.value = ventaCreada.id;
-    await finalizarVenta(ventaCreada.id);
+    await finalizarVenta(ventaCreada.id, ventaCreada);
     const { data: ticketData } = await obtenerTicket(ventaCreada.id);
     ticket.value = ticketData;
     dialogoCargando.value = false;
@@ -516,6 +763,7 @@ function nuevaVenta() {
   descuentoGlobal.value = 0;
   ticket.value = null;
   ultimaVentaId.value = null;
+  enfocarBarra();
 }
 
 function imprimirTicket() {
@@ -535,7 +783,7 @@ function imprimirTicket() {
           .text-center { text-align: center; }
           .text-bold { font-weight: bold; }
           hr { border: none; border-top: 1px dashed #000; }
-    </style>
+        </style>
       </head>
       <body>${content.innerHTML}</body>
     </html>
@@ -544,3 +792,184 @@ function imprimirTicket() {
   win.print();
 }
 </script>
+
+<style lang="scss" scoped>
+.pos-screen {
+  height: calc(100vh - 50px);
+  max-height: calc(100vh - 50px);
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.pos-header {
+  flex-shrink: 0;
+}
+
+.barcode-input {
+  :deep(.q-field__control) {
+    height: 40px;
+  }
+  :deep(.q-field__native) {
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+}
+
+.pos-cart {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #fafafa;
+}
+
+.cart-table {
+  font-size: 11px;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.cart-header,
+.cart-row {
+  display: grid;
+  grid-template-columns: 64px 40px 1fr 52px 42px 55px 22px;
+  column-gap: 2px;
+  align-items: center;
+  padding: 4px 6px;
+  min-width: 0;
+}
+
+.cart-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #e8e8e8;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid #ccc;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.cart-row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  min-height: 38px;
+}
+
+.cart-row:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.col-cant {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.cant-num {
+  min-width: 18px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.col-pres {
+  font-weight: 600;
+  color: #666;
+  font-size: 10px;
+  text-transform: uppercase;
+  text-align: center;
+  min-width: 0;
+}
+
+.col-desc {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 4px;
+  min-width: 0;
+}
+
+.col-precio,
+.col-monto {
+  text-align: right;
+  font-weight: 600;
+  font-size: 11px;
+  min-width: 0;
+}
+
+.col-desc-porc {
+  text-align: center;
+  min-width: 0;
+}
+
+.desc-input {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #c62828 !important;
+  text-align: center !important;
+}
+
+.col-actions {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.empty-state {
+  height: 100%;
+  min-height: 300px;
+}
+
+.pos-footer {
+  flex-shrink: 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.scanner-card {
+  width: 100%;
+  max-width: 500px;
+}
+
+.body--dark {
+  .pos-screen {
+    background: #1d1d1d;
+  }
+
+  .pos-cart {
+    background: #1a1a1a;
+  }
+
+  .cart-header {
+    background: #2a2a2a;
+    color: #bbb;
+    border-bottom-color: #444;
+  }
+
+  .cart-row {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .cart-row:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .col-desc,
+  .cant-num,
+  .col-precio,
+  .col-monto {
+    color: #e8e8e8;
+  }
+
+  .col-pres {
+    color: #999;
+  }
+
+  .pos-footer {
+    background: #1e1e1e;
+  }
+}
+</style>

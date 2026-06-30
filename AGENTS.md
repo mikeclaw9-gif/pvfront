@@ -13,7 +13,7 @@ If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is 
 
 ## Stack
 
-Quasar 2 · Vue 3.5 · Pinia 2 · Vue Router 4 · Axios · TypeScript 5.5 · SCSS · jsPDF
+Quasar 2 · Vue 3.5 · Pinia 2 · Vue Router 4 · Axios · TypeScript 5.5 · SCSS · jsPDF · Chart.js
 
 ## Developer Commands
 
@@ -28,8 +28,8 @@ Quasar 2 · Vue 3.5 · Pinia 2 · Vue Router 4 · Axios · TypeScript 5.5 · SCS
 
 - Port **9000**, bound to `0.0.0.0` (network-accessible). No auto-open.
 - Proxy: `/api/*` → `http://localhost:8090` (the backend API).
-- Allowed host: `miguel-desktop.local`.
-- Quasar App Vite v2 under the hood (Vite-based), builds to `dist/`.
+- `allowedHosts: true` (Vite) — accessible from any LAN IP.
+- Quasar App Vite v2 (Vite-based), builds to `dist/`.
 
 ## Non-source directories
 
@@ -40,15 +40,29 @@ Quasar 2 · Vue 3.5 · Pinia 2 · Vue Router 4 · Axios · TypeScript 5.5 · SCS
 
 ```
 src/
-├── api/          Axios functions per domain entity (auth, cliente, producto, usuario)
+├── api/          Axios functions per domain entity (auth, cliente, gasto, producto, reporte, usuario, venta)
 ├── boot/         Axios boot file (baseURL /api, JWT interceptor, 401 → redirect /login)
+├── components/   Reusable Vue components (BackendStatusIndicator)
 ├── css/          Global SCSS (body reset only)
 ├── layouts/      MainLayout.vue — shell with drawer nav + dark mode toggle
-├── pages/        LoginPage, DashboardPage, InventarioPage, UsuariosPage, ClientesPage
+├── pages/        LoginPage, DashboardPage, InventarioPage, UsuariosPage, ClientesPage, VentasPage, GastosPage, ReportesPage
 ├── router/       Hash-based routing (createWebHashHistory) with auth guard
-├── stores/       Pinia stores (auth, cliente, producto, usuario)
+├── stores/       Pinia stores (auth, cliente, gasto, producto, usuario, venta)
 └── utils/        PDF generator (jsPDF + jspdf-autotable)
 ```
+
+## Pages & Routes
+
+| Route | Page | Description |
+|-------|------|-------------|
+| `/login` | LoginPage | JWT auth (email + password) |
+| `/dashboard` | DashboardPage | Landing with nav cards |
+| `/ventas` | VentasPage | POS register with barcode scanner |
+| `/inventario` | InventarioPage | Product CRUD + barcode image scanner |
+| `/clientes` | ClientesPage | Client CRUD |
+| `/usuarios` | UsuariosPage | User CRUD (admin only) |
+| `/gastos` | GastosPage | Expense CRUD with filters + PDF |
+| `/reportes` | ReportesPage | 7 report types with filters, charts, exports |
 
 ## Conventions
 
@@ -60,6 +74,8 @@ src/
 - **Routing**: Hash-based (`/#/login`, `/#/dashboard`). Guard redirects unauthenticated users to `/login`.
 - **Dark mode** toggle persisted in `LocalStorage('darkMode')`.
 - **PDF export** via `generarPdf(titulo, columnas, datos, nombreArchivo, filtros?)` in `src/utils/pdf.ts`. Opens PDF in new tab.
+- **Barcode scanning**: On mobile opens installed scanner app via ZXing intent; fallback uses `<input capture>` + `BarcodeDetector` API / `html5-qrcode.scanFile`. All camera access via image capture (no streaming) — works on HTTP.
+- **Reports module**: 7 endpoints (`ventas`, `stock`, `productos`, `gastos`, `dashboard`, `cortes-caja`, `clientes`). Structured response format: `{ titulo, columnas, filas, tipoGrafico, graficoNombre }`. Exports: JSON, Excel (HTML→XLS), PDF (jsPDF), Print. Charts via Chart.js.
 - **Language**: Spanish (`lang: es` in quasar config). Material Icons.
 - **TypeScript**: strict mode, `@/*` path alias → `./src/*`. No `noUnusedLocals`/`noUnusedParameters`.
 - **Quasar plugins in use**: Dialog, Notify, Loading, LocalStorage.
@@ -69,7 +85,14 @@ src/
 
 Runs at `http://localhost:8090/api`. Endpoints mirror the frontend API files:
 - `POST /auth/login` — returns `{ token, email, nombre, apellido, rol }`
-- `/productos/*`, `/clientes/*`, `/usuarios/*` — full CRUD + `toggle-activo` + paginated list (`PageResponse<T>` shape)
+- `/productos/*`, `/clientes/*`, `/usuarios/*`, `/gastos/*`, `/ventas/*` — full CRUD + `toggle-activo` + paginated list
+- `GET /reportes/{tipo}` — report data with `filter` (JSON string) and `formato` query params
+
+## Dependencies added beyond Quasar scaffold
+
+- `chart.js` — chart rendering in ReportesPage
+- `jspdf` + `jspdf-autotable` — PDF generation
+- `html5-qrcode` — barcode image scanning fallback
 
 ## How to Answer
 Always answer in Spanish, using short answers; when asked for an explanation, provide more detailed answers.

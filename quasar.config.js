@@ -7,6 +7,13 @@ export default configure(function (ctx) {
     extras: ['material-icons'],
     build: {
       distDir: 'dist',
+      viteVuePluginOptions: {
+        vite: {
+          server: {
+            allowedHosts: true
+          }
+        }
+      }
     },
     devServer: {
       port: 9000,
@@ -16,15 +23,6 @@ export default configure(function (ctx) {
         '/api': {
           target: 'http://localhost:8090',
           changeOrigin: true
-        }
-      }
-    },
-    build: {
-      viteVuePluginOptions: {
-        vite: {
-          server: {
-            allowedHosts: ['miguel-desktop.local']
-          }
         }
       }
     },

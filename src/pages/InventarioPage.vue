@@ -81,13 +81,18 @@
     </q-table>
 
     <q-dialog v-model="dialogoVisible" persistent>
-      <q-card style="min-width: 500px">
+      <q-card class="dialog-card">
         <q-card-section>
           <div class="text-h6">{{ editando ? 'Editar producto' : 'Nuevo producto' }}</div>
         </q-card-section>
         <q-card-section>
           <q-form @submit.prevent="guardar" class="q-gutter-y-md">
-            <q-input v-model="form.codigo" label="Código" :rules="[required]" outlined lazy-rules />
+            <div class="row items-center q-gutter-x-sm">
+              <q-input v-model="form.codigo" label="Código" :rules="[required]" outlined lazy-rules class="col" />
+              <q-btn icon="qr_code_scanner" color="primary" round flat @click="abrirDialogoScanner">
+                <q-tooltip>Escanear código de barras</q-tooltip>
+              </q-btn>
+            </div>
             <q-input v-model="form.nombre" label="Nombre" :rules="[required]" outlined lazy-rules />
             <q-input v-model="form.descripcion" label="Descripción" type="textarea" outlined />
             <q-input v-model.number="form.precioCompra" label="Precio compra" type="number" :rules="[required, minCero]" outlined lazy-rules />
@@ -116,13 +121,33 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <q-dialog v-model="scannerVisible" persistent maximized>
+      <q-card class="scanner-card column no-wrap">
+        <q-card-section class="text-center">
+          <div class="text-h6">Escáner de código de barras</div>
+        </q-card-section>
+        <q-card-section class="col column flex-center q-gutter-y-md">
+          <q-btn icon="photo_camera" label="Tomar foto" color="primary" size="lg" class="full-width" @click="capturarCamara" />
+          <q-btn icon="image_search" label="Subir imagen" color="secondary" size="lg" class="full-width" outline @click="subirImagen" />
+          <q-img v-if="vistaPrevia" :src="vistaPrevia" style="max-height: 200px; max-width: 100%" />
+        </q-card-section>
+        <q-card-section v-if="errorScanner" class="text-center text-negative">
+          {{ errorScanner }}
+        </q-card-section>
+        <q-card-actions align="center">
+          <q-btn label="Cancelar" flat color="primary" @click="cerrarScanner" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+    <div id="barcode-scanner-dummy" style="display: none"></div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useProductoStore } from '../stores/producto-store';
-import { Notify } from 'quasar';
+import { Notify, Loading } from 'quasar';
 import { generarPdf } from '../utils/pdf';
 import type { ProductoResponse, ProductoRequest } from '../api/producto.api';
 
@@ -165,12 +190,13 @@ const form = ref<ProductoRequest>({
   precioCompra: 0,
   precioVenta: 0,
   existencia: 0,
-  imagen: '',
+  imagenUrl: '',
 });
-const editandoId = ref<string | null>(null);
+const editandoId = ref<number | null>(null);
 const imagePreview = ref<string | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const cameraInputRef = ref<HTMLInputElement | null>(null);
+
 
 const filteredRows = computed(() => {
   let rows = store.productos.map((p) => ({ ...p, _expandDesc: false }));
@@ -210,13 +236,13 @@ function abrirDialogo(producto?: ProductoResponse) {
       precioCompra: producto.precioCompra,
       precioVenta: producto.precioVenta,
       existencia: producto.existencia,
-      imagen: producto.imagen || '',
+      imagenUrl: producto.imagenUrl || '',
     };
-    imagePreview.value = producto.imagen || null;
+    imagePreview.value = producto.imagenUrl || null;
   } else {
     editando.value = false;
     editandoId.value = null;
-    form.value = { codigo: '', nombre: '', descripcion: '', precioCompra: 0, precioVenta: 0, existencia: 0, imagen: '' };
+    form.value = { codigo: '', nombre: '', descripcion: '', precioCompra: 0, precioVenta: 0, existencia: 0, imagenUrl: '' };
     imagePreview.value = null;
   }
   dialogoVisible.value = true;
@@ -238,7 +264,7 @@ function onFileSelected(event: Event) {
   reader.onload = (e) => {
     const dataUrl = e.target?.result as string;
     imagePreview.value = dataUrl;
-    form.value.imagen = dataUrl;
+    form.value.imagenUrl = dataUrl;
   };
   reader.readAsDataURL(file);
   input.value = '';
@@ -246,7 +272,7 @@ function onFileSelected(event: Event) {
 
 function removeImage() {
   imagePreview.value = null;
-  form.value.imagen = '';
+  form.value.imagenUrl = '';
 }
 
 async function guardar() {
@@ -282,6 +308,122 @@ async function eliminar(producto: ProductoResponse) {
   }
 }
 
+const scannerVisible = ref(false);
+const vistaPrevia = ref<string | null>(null);
+const errorScanner = ref('');
+
+function abrirDialogoScanner() {
+  sessionStorage.setItem('formProducto', JSON.stringify(form.value));
+  sessionStorage.setItem('editandoProducto', JSON.stringify({ editando: editando.value, editandoId: editandoId.value, imagePreview: imagePreview.value }));
+  dialogoVisible.value = false;
+  scannerVisible.value = true;
+  errorScanner.value = '';
+  vistaPrevia.value = null;
+}
+
+function cerrarScanner() {
+  scannerVisible.value = false;
+  restaurarFormulario();
+}
+
+function restaurarFormulario() {
+  const guardado = sessionStorage.getItem('formProducto');
+  if (guardado) {
+    try {
+      Object.assign(form.value, JSON.parse(guardado));
+    } catch { /* ignore */ }
+  }
+  const estado = sessionStorage.getItem('editandoProducto');
+  if (estado) {
+    try {
+      const e = JSON.parse(estado);
+      editando.value = e.editando;
+      editandoId.value = e.editandoId;
+      imagePreview.value = e.imagePreview;
+    } catch { /* ignore */ }
+  }
+  sessionStorage.removeItem('formProducto');
+  sessionStorage.removeItem('editandoProducto');
+  dialogoVisible.value = true;
+}
+
+function capturarCamara() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  (input as any).capture = 'environment';
+  input.style.display = 'none';
+  input.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) procesarImagen(file);
+    input.remove();
+  });
+  document.body.appendChild(input);
+  input.click();
+}
+
+function subirImagen() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
+  input.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) procesarImagen(file);
+    input.remove();
+  });
+  document.body.appendChild(input);
+  input.click();
+}
+
+async function procesarImagen(file: File) {
+  vistaPrevia.value = URL.createObjectURL(file);
+  errorScanner.value = '';
+  Loading.show({ message: 'Analizando código de barras...' });
+  try {
+    const code = await detectarCodigo(file);
+    Loading.hide();
+    if (code) {
+      form.value.codigo = code;
+      scannerVisible.value = false;
+      sessionStorage.removeItem('formProducto');
+      sessionStorage.removeItem('editandoProducto');
+      dialogoVisible.value = true;
+      Notify.create({ type: 'positive', message: 'Código: ' + code });
+    } else {
+      errorScanner.value = 'No se detectó ningún código de barras en la imagen.';
+      Notify.create({ type: 'warning', message: 'Código no detectado. Intenta con otra imagen.' });
+    }
+  } catch (err: any) {
+    Loading.hide();
+    errorScanner.value = err.message || 'Error al procesar la imagen';
+    Notify.create({ type: 'negative', message: errorScanner.value });
+  }
+}
+
+async function detectarCodigo(file: File): Promise<string | null> {
+  const image = new Image();
+  image.src = URL.createObjectURL(file);
+  await image.decode();
+  if ('BarcodeDetector' in window) {
+    try {
+      const detector = new (window as any).BarcodeDetector({
+        formats: ['ean_13', 'ean_8', 'code_128', 'code_39', 'code_93', 'codabar', 'upc_a', 'upc_e', 'itf', 'qr_code', 'data_matrix', 'pdf417', 'aztec'],
+      });
+      const resultados = await detector.detect(image);
+      if (resultados.length > 0) return resultados[0].rawValue;
+    } catch { /* fallback */ }
+  }
+  const { Html5Qrcode } = await import('html5-qrcode');
+  const scanner = new Html5Qrcode('barcode-scanner-dummy');
+  try {
+    const code = await scanner.scanFile(file, false);
+    return code;
+  } finally {
+    scanner.clear();
+  }
+}
+
 function limpiarFiltros() {
   filtroTexto.value = '';
   filtroPrecioCompraMin.value = null;
@@ -313,3 +455,21 @@ function imprimirPDF() {
   );
 }
 </script>
+
+<style scoped>
+.dialog-card {
+  min-width: 500px;
+  max-width: 90vw;
+}
+
+.scanner-card {
+  width: 100%;
+  max-width: 500px;
+}
+
+@media (max-width: 600px) {
+  .dialog-card {
+    min-width: 95vw;
+  }
+}
+</style>
