@@ -59,10 +59,20 @@
 
         <div v-if="mostrarChart" class="q-mb-lg">
           <q-card flat bordered>
-            <q-card-section>
-              <div class="text-subtitle1 text-weight-bold q-mb-sm">{{ chartTitulo }}</div>
-              <canvas ref="chartCanvas" style="max-height: 300px; width: 100%;"></canvas>
+            <q-card-section class="cursor-pointer" @click="chartExpanded = !chartExpanded">
+              <div class="row items-center">
+                <div class="text-subtitle1 text-weight-bold">{{ chartTitulo }}</div>
+                <q-space />
+                <q-btn flat dense round :icon="chartExpanded ? 'expand_less' : 'expand_more'" size="sm" />
+              </div>
             </q-card-section>
+            <q-slide-transition>
+              <div v-show="chartExpanded">
+                <q-card-section>
+                  <canvas ref="chartCanvas" style="max-height: 300px; width: 100%;"></canvas>
+                </q-card-section>
+              </div>
+            </q-slide-transition>
           </q-card>
         </div>
 
@@ -72,6 +82,7 @@
             <thead>
               <tr>
                 <th v-for="col in columnasMostrar" :key="col.key" class="text-left" style="white-space: nowrap;">{{ col.label }}</th>
+                <th v-if="reporteActivo === 'ventas'" class="text-center" style="white-space: nowrap; width: 60px;">Detalle</th>
               </tr>
             </thead>
             <tbody>
@@ -79,6 +90,11 @@
                 <td v-for="col in columnasMostrar" :key="col.key" :class="esNumero(col.key) ? 'text-right' : ''">
                   <q-badge v-if="col.key === 'Estado'" :color="colorEstado(row[col.key])">{{ row[col.key] }}</q-badge>
                   <span v-else>{{ row[col.key] || '*N/A*' }}</span>
+                </td>
+                <td v-if="reporteActivo === 'ventas'" class="text-center">
+                  <q-btn dense flat round icon="visibility" color="primary" size="sm" @click="verDetalle(filas[ri])">
+                    <q-tooltip>Ver detalle</q-tooltip>
+                  </q-btn>
                 </td>
               </tr>
             </tbody>
@@ -100,9 +116,82 @@
         <q-btn push color="primary" icon="file_download" label="JSON" @click="exportJson" />
         <q-btn push color="positive" icon="description" label="Excel" @click="exportExcel" />
         <q-btn push color="negative" icon="picture_as_pdf" label="PDF" @click="exportPdf" />
-        <q-btn push color="dark" icon="print" label="Imprimir" @click="exportPrint" />
+        <q-btn push color="warning" icon="print" label="Imprimir" @click="exportPrint" />
       </q-btn-group>
     </q-page-sticky>
+
+    <q-dialog v-model="detalleDialogVisible" maximized>
+      <q-card>
+        <q-card-section class="row items-center q-gutter-sm">
+          <q-icon name="receipt" size="sm" color="primary" />
+          <span class="text-h6">Detalle de venta #{{ detalleTicket?.ventaId }}</span>
+          <q-space />
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-card-section>
+        <q-separator />
+        <q-card-section v-if="detalleLoading" class="text-center q-pa-xl">
+          <q-spinner size="48px" color="primary" />
+        </q-card-section>
+        <q-card-section v-else-if="detalleTicket">
+          <div class="row q-col-gutter-md q-mb-md">
+            <div class="col-6 col-sm-3">
+              <q-card flat bordered>
+                <q-card-section class="text-center">
+                  <div class="text-caption text-grey">Total</div>
+                  <div class="text-h6 text-primary">${{ detalleTicket.total.toFixed(2) }}</div>
+                </q-card-section>
+              </q-card>
+            </div>
+            <div class="col-6 col-sm-3">
+              <q-card flat bordered>
+                <q-card-section class="text-center">
+                  <div class="text-caption text-grey">Fecha</div>
+                  <div class="text-body2">{{ formatearFecha2(detalleTicket.fecha) }}</div>
+                </q-card-section>
+              </q-card>
+            </div>
+            <div class="col-6 col-sm-3">
+              <q-card flat bordered>
+                <q-card-section class="text-center">
+                  <div class="text-caption text-grey">Atendido por</div>
+                  <div class="text-body2">{{ detalleTicket.atendidoPor }}</div>
+                </q-card-section>
+              </q-card>
+            </div>
+            <div class="col-6 col-sm-3">
+              <q-card flat bordered>
+                <q-card-section class="text-center">
+                  <div class="text-caption text-grey">Cliente</div>
+                  <div class="text-body2">{{ detalleTicket.cliente || 'Sin cliente' }}</div>
+                </q-card-section>
+              </q-card>
+            </div>
+          </div>
+          <q-markup-table dense flat bordered>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th class="text-right">Cantidad</th>
+                <th class="text-center">Unidad</th>
+                <th class="text-right">P. Unitario</th>
+                <th class="text-right">Desc. %</th>
+                <th class="text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(linea, idx) in detalleTicket.lineas" :key="idx">
+                <td>{{ linea.producto }}</td>
+                <td class="text-right">{{ linea.cantidad }}</td>
+                <td class="text-center">{{ linea.unidad }}</td>
+                <td class="text-right">${{ linea.precioUnitario.toFixed(2) }}</td>
+                <td class="text-right">{{ linea.descuentoPorcentaje > 0 ? linea.descuentoPorcentaje + '%' : '-' }}</td>
+                <td class="text-right">${{ linea.importe.toFixed(2) }}</td>
+              </tr>
+            </tbody>
+          </q-markup-table>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -117,6 +206,8 @@ import {
 import type { ReporteVentasFilter, ReporteStockFilter, ReporteProductosFilter, ReporteGastosFilter, ReporteDashboardFilter, ReporteCortesFilter, ReporteClientesFilter } from '../api/reporte.api';
 import { generarPdf } from '../utils/pdf';
 import { useAuthStore } from '../stores/auth-store';
+import { obtenerTicket } from '../api/venta.api';
+import type { TicketResponse } from '../api/venta.api';
 
 Chart.register(...registerables);
 
@@ -129,7 +220,36 @@ const errorMsg = ref('');
 const datos = ref<Record<string, unknown> | null>(null);
 const chartCanvas = ref<HTMLCanvasElement | null>(null);
 let chartInstancia: Chart | null = null;
+const chartExpanded = ref(false);
 const filtros = ref<Record<string, unknown>>({});
+
+const detalleDialogVisible = ref(false);
+const detalleLoading = ref(false);
+const detalleTicket = ref<TicketResponse | null>(null);
+
+async function verDetalle(row: Record<string, unknown>) {
+  const id = row.id ?? row.ID ?? row.ventaId;
+  if (!id) return;
+  detalleLoading.value = true;
+  detalleDialogVisible.value = true;
+  try {
+    const { data } = await obtenerTicket(Number(id));
+    detalleTicket.value = data;
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al obtener detalle de la venta' });
+    detalleDialogVisible.value = false;
+  } finally {
+    detalleLoading.value = false;
+  }
+}
+
+function formatearFecha2(fecha?: string) {
+  if (!fecha) return '';
+  return new Date(fecha).toLocaleString('es-MX', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
 
 const reportes = [
   { key: 'ventas', label: 'Ventas', icon: 'point_of_sale' },
@@ -642,9 +762,22 @@ function exportPrint() {
   window.print();
 }
 
-watch(reporteActivo, () => { filtros.value = {}; fetchReporte(); });
+function fechaHoy(): string {
+  const hoy = new Date();
+  return hoy.toISOString().substring(0, 10);
+}
+
+function filtrosIniciales(reporte: string): Record<string, unknown> {
+  if (reporte === 'ventas') {
+    const hoy = fechaHoy();
+    return { fechaDesde: hoy, fechaHasta: hoy };
+  }
+  return {};
+}
+
+watch(reporteActivo, (nuevo) => { filtros.value = filtrosIniciales(nuevo); fetchReporte(); });
 watch(filas, async () => { await nextTick(); renderChart(); }, { deep: true });
-onMounted(() => fetchReporte());
+onMounted(() => { filtros.value = filtrosIniciales(reporteActivo.value); fetchReporte(); });
 onUnmounted(() => destruirChart());
 </script>
 
@@ -654,22 +787,25 @@ onUnmounted(() => destruirChart());
   margin: 0 auto;
 }
 .reporte-header {
-  border-bottom: 2px solid var(--q-primary, #1976D2);
-  padding-bottom: 4px;
-  margin-bottom: 16px;
+  border-bottom: 2px solid var(--q-primary);
+  padding-bottom: 8px;
+  margin-bottom: 20px;
 }
 .resumen-ejecutivo {
-  background: #f5f5f5;
-  border-left: 4px solid var(--q-primary, #1976D2);
-  padding: 12px 16px;
-  border-radius: 4px;
+  background: var(--q-dark);
+  border-left: 4px solid var(--q-primary);
+  padding: 16px 20px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
 }
-.body--dark .resumen-ejecutivo {
-  background: #1d1d1d;
+.q-markup-table {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 .q-markup-table th {
   font-weight: 600;
-  background-color: var(--q-primary, #1976D2);
+  background-color: var(--q-primary);
   color: white;
 }
 </style>

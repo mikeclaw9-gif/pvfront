@@ -3,8 +3,8 @@
 
 In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:
 
-- **MCP tools** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them. `codegraph_node` returns one symbol's source + callers, or reads a whole file with line numbers. If the tools are listed but deferred, load them by name via tool search.
-- **Shell** (always works): `codegraph explore "<symbol names or question>"` and `codegraph node <symbol-or-file>` print the same output.
+- **MCP tool** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them, including dynamic-dispatch hops grep can't follow. Name a file or symbol in the query to read its current line-numbered source. If it's listed but deferred, load it by name via tool search.
+- **Shell** (always works): `codegraph explore "<symbol names or question>"` prints the same output.
 
 If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
 <!-- CODEGRAPH_END -->
@@ -43,11 +43,12 @@ src/
 ├── api/          Axios functions per domain entity (auth, cliente, gasto, producto, reporte, usuario, venta)
 ├── boot/         Axios boot file (baseURL /api, JWT interceptor, 401 → redirect /login)
 ├── components/   Reusable Vue components (BackendStatusIndicator)
-├── css/          Global SCSS (body reset only)
-├── layouts/      MainLayout.vue — shell with drawer nav + dark mode toggle
+├── css/          Global SCSS (theme CSS variables, transitions, scrollbar, resets)
+├── layouts/      MainLayout.vue — shell with bottom tabs (mobile) / drawer (desktop), 3-theme selector, dark mode toggle
 ├── pages/        LoginPage, DashboardPage, InventarioPage, UsuariosPage, ClientesPage, VentasPage, GastosPage, ReportesPage
 ├── router/       Hash-based routing (createWebHashHistory) with auth guard
-├── stores/       Pinia stores (auth, cliente, gasto, producto, usuario, venta)
+├── stores/       Pinia stores (auth, cliente, gasto, producto, theme, usuario, venta)
+├── theme/        Theme definitions (Corporate, Nature, Midnight) with light/dark palettes
 └── utils/        PDF generator (jsPDF + jspdf-autotable)
 ```
 
@@ -73,9 +74,10 @@ src/
 - **Auth**: JWT token persisted in `LocalStorage` via Quasar's wrapper. Axios interceptor attaches `Bearer` header. 401 responses clear token and redirect to `/login`.
 - **Routing**: Hash-based (`/#/login`, `/#/dashboard`). Guard redirects unauthenticated users to `/login`.
 - **Dark mode** toggle persisted in `LocalStorage('darkMode')`.
+- **3 themes**: Corporate (blue), Nature (green), Midnight (indigo/dark). Each has light/dark palettes defined in `src/theme/themes.ts`. Applied via CSS custom properties from `theme-store.ts`.
 - **PDF export** via `generarPdf(titulo, columnas, datos, nombreArchivo, filtros?)` in `src/utils/pdf.ts`. Opens PDF in new tab.
 - **Barcode scanning**: On mobile opens installed scanner app via ZXing intent; fallback uses `<input capture>` + `BarcodeDetector` API / `html5-qrcode.scanFile`. All camera access via image capture (no streaming) — works on HTTP.
-- **Reports module**: 7 endpoints (`ventas`, `stock`, `productos`, `gastos`, `dashboard`, `cortes-caja`, `clientes`). Structured response format: `{ titulo, columnas, filas, tipoGrafico, graficoNombre }`. Exports: JSON, Excel (HTML→XLS), PDF (jsPDF), Print. Charts via Chart.js.
+- **Reports module**: 7 endpoints (`ventas`, `stock`, `productos`, `gastos`, `dashboard`, `cortes-caja`, `clientes`). Structured response format: `{ titulo, columnas, filas, tipoGrafico, graficoNombre }`. Exports: JSON, Excel (HTML→XLS), PDF (jsPDF), Print (warning/yellow button). Charts via Chart.js in collapsible panel. Default date filters = today for ventas report. Detail dialog on ventas rows uses `GET /ventas/{id}/ticket` to show product names and line items.
 - **Language**: Spanish (`lang: es` in quasar config). Material Icons.
 - **TypeScript**: strict mode, `@/*` path alias → `./src/*`. No `noUnusedLocals`/`noUnusedParameters`.
 - **Quasar plugins in use**: Dialog, Notify, Loading, LocalStorage.

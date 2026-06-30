@@ -221,3 +221,17 @@ function imprimirPDF() {
   );
 }
 </script>
+
+<style scoped>
+:deep(.q-table) {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+:deep(.q-table thead th) {
+  font-weight: 600;
+  background: var(--q-primary);
+  color: white;
+}
+</style>
