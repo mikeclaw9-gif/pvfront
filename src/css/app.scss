@@ -2,3 +2,31 @@ body {
   margin: 0;
   padding: 0;
 }
+
+[data-theme="console"] {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+[data-theme="console"] .non-selectable {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+[data-theme="console"].body--dark {
+  --q-dark-page: #0a0a0a;
+  --q-dark: #141414;
+}
+
+body.body--dark {
+  --q-dark-page: #1d1d1d;
+  --q-dark: #262626;
+}
+
+[data-theme="ocean"].body--dark {
+  --q-dark-page: #0d1b2a;
+  --q-dark: #1b2838;
+}
+
+[data-theme="emerald"].body--dark {
+  --q-dark-page: #0d1f0d;
+  --q-dark: #162816;
+}
