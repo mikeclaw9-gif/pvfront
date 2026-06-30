@@ -1,32 +1,107 @@
+/* ── Transiciones suaves para cambio de tema ── */
+*,
+*::before,
+*::after {
+  transition: background-color 0.25s ease,
+              color 0.25s ease,
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+}
+
+/* ── Reset ── */
 body {
   margin: 0;
   padding: 0;
 }
 
-[data-theme="console"] {
-  font-family: 'Courier New', Courier, monospace;
+/* ── Scrollbar personalizada ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-[data-theme="console"] .non-selectable {
-  font-family: 'Courier New', Courier, monospace;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-[data-theme="console"].body--dark {
-  --q-dark-page: #0a0a0a;
-  --q-dark: #141414;
+::-webkit-scrollbar-thumb {
+  background: var(--q-primary, #1976D2);
+  border-radius: 3px;
+  opacity: 0.4;
 }
 
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.7;
+}
+
+/* ── Selección de texto ── */
+::selection {
+  background: var(--q-primary, #1976D2);
+  color: #fff;
+}
+
+/* ── Sombras consistentes ── */
+:root {
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.04);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+.body--dark {
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.2);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.3), 0 10px 10px rgba(0,0,0,0.2);
+}
+
+/* ── Dark mode page backgrounds ── */
 body.body--dark {
-  --q-dark-page: #1d1d1d;
-  --q-dark: #262626;
+  --q-dark-page: var(--q-dark-page, #1d1d1d);
+  --q-dark: var(--q-dark, #262626);
 }
 
-[data-theme="ocean"].body--dark {
-  --q-dark-page: #0d1b2a;
-  --q-dark: #1b2838;
-}
-
-[data-theme="emerald"].body--dark {
+[data-theme="nature"].body--dark {
   --q-dark-page: #0d1f0d;
   --q-dark: #162816;
 }
+
+[data-theme="midnight"].body--dark {
+  --q-dark-page: #0b0d11;
+  --q-dark: #111318;
+}
+
+/* ── Clases utilitarias de bordes redondeados ── */
+.rounded-card {
+  border-radius: var(--radius-md);
+}
+
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+
+/* ── Animaciones ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease both;
+}
+
+.animate-fade-in-up:nth-child(1) { animation-delay: 0.05s; }
+.animate-fade-in-up:nth-child(2) { animation-delay: 0.1s; }
+.animate-fade-in-up:nth-child(3) { animation-delay: 0.15s; }
+.animate-fade-in-up:nth-child(4) { animation-delay: 0.2s; }
+.animate-fade-in-up:nth-child(5) { animation-delay: 0.25s; }
+.animate-fade-in-up:nth-child(6) { animation-delay: 0.3s; }

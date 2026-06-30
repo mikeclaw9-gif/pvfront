@@ -23,6 +23,7 @@ export interface DetalleVentaResponse {
   productoId: number;
   productoCodigo: string;
   productoNombre: string;
+  productoDescripcion?: string;
   productoPesado: boolean;
   cantidad: number;
   precioUnitario: number;

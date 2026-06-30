@@ -52,9 +52,9 @@ pventafront/
     ├── components/
     │   └── BackendStatusIndicator.vue
     ├── css/
-    │   └── app.scss            # Global styles + tema Consola SCSS
+    │   └── app.scss            # Global styles (theme CSS vars, transitions, scrollbar, resets)
     ├── layouts/
-    │   └── MainLayout.vue      # Shell: drawer nav, temas, logout
+    │   └── MainLayout.vue      # Shell: bottom tabs (mobile) / drawer (desktop), 3-theme selector, dark mode
     ├── pages/
     │   ├── LoginPage.vue
     │   ├── DashboardPage.vue
@@ -73,8 +73,11 @@ pventafront/
     │   ├── cliente-store.ts
     │   ├── gasto-store.ts
     │   ├── producto-store.ts
+    │   ├── theme-store.ts
     │   ├── usuario-store.ts
     │   └── venta-store.ts
+    ├── theme/
+    │   └── themes.ts           # 3 themes (Corporate, Nature, Midnight) with light/dark palettes
     └── utils/
         └── pdf.ts              # PDF generator (jsPDF)
 ```
@@ -140,21 +143,21 @@ Composition API (`<script setup lang="ts">`). Consumen stores o API directa.
 
 ### 6.1 Temas disponibles
 
-4 temas seleccionables desde el menú lateral (ícono `palette`), cada uno con variante claro y oscuro:
+3 temas seleccionables desde un diálogo en la toolbar (icono `palette`), cada uno con variante claro y oscuro persistida en `LocalStorage('darkMode')`:
 
-| Tema | Claro (primario) | Oscuro (primario) |
-|------|------------------|--------------------|
-| **Predeterminado** | Azul `#1976D2` | Azul claro `#64B5F6` |
-| **Oceánico** | Teal `#00695C` | Teal claro `#26A69A` |
-| **Esmeralda** | Verde `#1B5E20` | Verde `#4CAF50` |
-| **Consola** | Naranja `#BF360C` + tipografía monospace | Verde neón `#00FF41` sobre fondo `#0a0a0a` + monospace |
+| Tema | Estilo claro (primario) | Estilo oscuro (primario) |
+|------|------------------------|--------------------------|
+| **Corporate** | Azul corporate `#1565C0`, fondos claros | Azul sobre fondos `#0E1622`/`#1C2533` |
+| **Nature** | Verde naturaleza `#2E7D32`, fondos crema | Verde sobre fondos `#0B160B`/`#162616` |
+| **Midnight** | Acento índigo `#5C6BC0`, fondos gris claro | Índigo sobre fondos `#0D0F14`/`#1A1D26` |
 
 ### 6.2 Implementación
 
-- Las paletas se definen en `MainLayout.vue` como un array de objetos `Theme`
-- Al seleccionar, se aplican CSS custom properties en `:root` (`--q-primary`, `--q-secondary`, etc.)
-- Tema y modo oscuro persisten en `LocalStorage('selectedTheme', 'darkMode')`
-- `app.scss` define estilos específicos por tema (fondo oscuro Consola `#0a0a0a`, fondo Oceánico `#0d1b2a`, etc.)
+- **Paletas**: definidas en `src/theme/themes.ts` como objeto `Record<string, ThemePalettes>` con colores `primary`, `secondary`, `accent`, `positive`, `negative`, `info`, `warning` para `light` y `dark`
+- **Store**: `src/stores/theme-store.ts` (Pinia) — estado `themeActual` (Corporate/Nature/Midnight) + `darkMode` boolean, persistido en `LocalStorage`
+- **Aplicación**: el store escribe CSS custom properties en `:root` (`--q-primary`, `--q-secondary`, `--q-dark`, `--q-dark-page`, etc.) al cambiar tema o modo
+- **Transiciones**: `app.scss` define transiciones suaves (`transition: background-color 0.3s, color 0.3s`) en `*` y colores base para `body`, `#q-app`, `.q-page`
+- **Específicos por tema**: cada tema define su propio `--q-dark` (fondo de cards) y `--q-dark-page` (fondo de página) con suficiente contraste para legibilidad
 
 ---
 
@@ -202,16 +205,20 @@ Composition API (`<script setup lang="ts">`). Consumen stores o API directa.
 ### 7.8 ReportesPage
 - 7 tipos: Ventas, Stock, Productos, Gastos, Dashboard, Cortes de Caja, Clientes
 - Filtros dinámicos por tipo (fechas, texto, número, selects)
+- **Fechas por defecto**: al seleccionar el tab Ventas, `fechaDesde` y `fechaHasta` se inicializan con la fecha actual (`YYYY-MM-DD`)
 - Formato respuesta backend: `{ titulo, columnas[], filas[], tipoGrafico?, graficoNombre? }`
 - Resumen ejecutivo narrativo calculado de los datos
 - Tarjetas de métricas clave
-- Gráfica (Chart.js): LINEA, BARRA, DONA según `tipoGrafico` del backend
+- Gráfica (Chart.js): LINEA, BARRA, DONA según `tipoGrafico` del backend, en **panel colapsable** (por defecto cerrado — botón expandir/contraer en el encabezado)
 - Tabla detallada con formato: `$XX.00` montos, `YYYY-MM-DD HH:MM` fechas, `*N/A*` vacíos
+- **Columna Detalle** en reporte Ventas: botón `visibility` que abre diálogo maximizado con datos del ticket (`GET /ventas/{id}/ticket`):
+  - 4 tarjetas resumen: Total, Fecha, Atendido por, Cliente
+  - Tabla de líneas: Producto (nombre real), Cantidad, Unidad (KG/PIEZA), P. Unitario, Desc. %, Subtotal
 - Exportaciones (todas funcionan desde datos frontend):
   - **JSON**: Blob descargable
   - **Excel**: HTML table → `.xls` (abre en Excel)
   - **PDF**: jsPDF + jspdf-autotable via `generarPdf()`
-  - **Imprimir**: `window.print()`
+  - **Imprimir**: `window.print()` (botón color `warning`/amarillo para contraste)
 
 ---
 
@@ -345,4 +352,5 @@ framework: {
 - Autenticación: JWT Bearer token
 - Paginación: `PageResponse<T>` con `content, page, size, totalElements, totalPages`
 - Endpoints CRUD por entidad con `toggle-activo` (PATCH)
+- `GET /ventas/{id}/ticket` — `TicketResponse` con `lineas[]` (producto, cantidad, unidad, precioUnitario, descuentoPorcentaje, importe) — usado en el diálogo Detalle de ReportesPage
 - Reportes: endpoint GET con filtro JSON string + formato (JSON/EXCEL/PDF/PRINT)

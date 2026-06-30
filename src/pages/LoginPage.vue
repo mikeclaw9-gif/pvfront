@@ -1,14 +1,17 @@
 <template>
-  <div class="window-height window-width row items-center justify-center bg-grey-2">
-    <q-card style="width: 400px; max-width: 90vw">
-      <q-card-section class="text-center">
-        <q-icon name="point_of_sale" size="64px" color="primary" />
+  <div class="login-screen window-height window-width column flex-center">
+    <div class="login-decoration" />
+    <q-card class="login-card" flat>
+      <q-card-section class="text-center q-pt-xl">
+        <div class="login-logo">
+          <q-icon name="point_of_sale" size="56px" color="primary" />
+        </div>
         <div class="text-h5 q-mt-md text-weight-bold">Pventafront</div>
-        <div class="text-caption text-grey">Inicia sesión para continuar</div>
+        <div class="text-caption text-grey-7 q-mt-xs">Inicia sesión para continuar</div>
       </q-card-section>
-      <q-card-section>
+      <q-card-section class="q-px-lg q-pb-lg">
         <BackendStatusIndicator :status="backendStatus" :error="backendError" />
-        <q-form @submit.prevent="handleLogin" class="q-gutter-y-md">
+        <q-form @submit.prevent="handleLogin" class="q-gutter-y-md q-mt-md">
           <q-input
             v-model="email"
             label="Email"
@@ -16,9 +19,10 @@
             :rules="[required]"
             outlined
             lazy-rules
+            class="login-input"
           >
             <template v-slot:prepend>
-              <q-icon name="email" />
+              <q-icon name="email" color="primary" />
             </template>
           </q-input>
           <q-input
@@ -28,14 +32,16 @@
             :rules="[required]"
             outlined
             lazy-rules
+            class="login-input"
           >
             <template v-slot:prepend>
-              <q-icon name="lock" />
+              <q-icon name="lock" color="primary" />
             </template>
             <template v-slot:append>
               <q-icon
                 :name="showPassword ? 'visibility_off' : 'visibility'"
                 class="cursor-pointer"
+                color="grey-6"
                 @click="showPassword = !showPassword"
               />
             </template>
@@ -46,6 +52,8 @@
             color="primary"
             class="full-width"
             :loading="loading"
+            size="lg"
+            unelevated
           />
         </q-form>
       </q-card-section>
@@ -102,3 +110,45 @@ async function handleLogin() {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.login-screen {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 20% 30%, var(--q-primary) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, var(--q-secondary) 0%, transparent 50%),
+    var(--q-dark-page);
+}
+
+.login-decoration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255,255,255,0.03) 0%, transparent 50%),
+    radial-gradient(circle at 90% 90%, rgba(255,255,255,0.03) 0%, transparent 50%);
+}
+
+.login-card {
+  width: 400px;
+  max-width: 88vw;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  z-index: 1;
+}
+
+.login-logo {
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.login-input :deep(.q-field__control) {
+  border-radius: var(--radius-sm);
+}
+</style>

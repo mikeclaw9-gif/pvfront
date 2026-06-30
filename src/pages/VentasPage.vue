@@ -798,7 +798,7 @@ function imprimirTicket() {
   height: calc(100vh - 50px);
   max-height: calc(100vh - 50px);
   overflow: hidden;
-  background: #f5f5f5;
+  background: var(--q-dark-page);
 }
 
 .pos-header {
@@ -819,7 +819,7 @@ function imprimirTicket() {
   flex: 1 1 auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  background: #fafafa;
+  background: var(--q-dark);
 }
 
 .cart-table {
@@ -842,18 +842,18 @@ function imprimirTicket() {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #e8e8e8;
+  background: var(--q-primary);
   font-weight: 700;
-  color: #555;
+  color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  border-bottom: 1px solid #ccc;
   padding-top: 5px;
   padding-bottom: 5px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
 .cart-row {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   min-height: 38px;
 }
 
@@ -877,11 +877,12 @@ function imprimirTicket() {
 
 .col-pres {
   font-weight: 600;
-  color: #666;
+  color: var(--q-primary);
   font-size: 10px;
   text-transform: uppercase;
   text-align: center;
   min-width: 0;
+  opacity: 0.8;
 }
 
 .col-desc {
@@ -935,18 +936,8 @@ function imprimirTicket() {
 }
 
 .body--dark {
-  .pos-screen {
-    background: #1d1d1d;
-  }
-
   .pos-cart {
-    background: #1a1a1a;
-  }
-
-  .cart-header {
-    background: #2a2a2a;
-    color: #bbb;
-    border-bottom-color: #444;
+    background: var(--q-dark);
   }
 
   .cart-row {
@@ -957,19 +948,8 @@ function imprimirTicket() {
     background: rgba(255, 255, 255, 0.03);
   }
 
-  .col-desc,
-  .cant-num,
-  .col-precio,
-  .col-monto {
-    color: #e8e8e8;
-  }
-
-  .col-pres {
-    color: #999;
-  }
-
   .pos-footer {
-    background: #1e1e1e;
+    background: var(--q-dark);
   }
 }
 </style>

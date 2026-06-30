@@ -460,11 +460,24 @@ function imprimirPDF() {
 .dialog-card {
   min-width: 500px;
   max-width: 90vw;
+  border-radius: var(--radius-md);
 }
 
 .scanner-card {
   width: 100%;
   max-width: 500px;
+}
+
+:deep(.q-table) {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+:deep(.q-table thead th) {
+  font-weight: 600;
+  background: var(--q-primary);
+  color: white;
 }
 
 @media (max-width: 600px) {

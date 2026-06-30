@@ -42,11 +42,11 @@ const iconName = computed(() => {
 const iconColor = computed(() => {
   switch (props.status) {
     case 'available':
-      return 'green';
+      return 'positive';
     case 'unavailable':
-      return 'red';
+      return 'negative';
     case 'checking':
-      return 'grey';
+      return 'grey-7';
   }
 });
 </script>
