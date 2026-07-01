@@ -96,6 +96,10 @@
                 <q-item-section avatar><q-icon name="people" size="sm" /></q-item-section>
                 <q-item-section>Clientes</q-item-section>
               </q-item>
+              <q-item clickable v-ripple to="/cortes-caja">
+                <q-item-section avatar><q-icon name="account_balance" size="sm" /></q-item-section>
+                <q-item-section>Cortes de Caja</q-item-section>
+              </q-item>
               <q-item clickable v-ripple to="/reportes">
                 <q-item-section avatar><q-icon name="bar_chart" size="sm" /></q-item-section>
                 <q-item-section>Reportes</q-item-section>
@@ -140,9 +144,9 @@
                   : { border: '2px solid transparent' }"
                 @click="selectTheme(t.id)"
               >
-                <q-card-section class="text-center q-py-md">
-                  <q-icon :name="t.icon" size="32px" />
-                  <div class="text-caption q-mt-xs text-weight-medium">{{ t.label }}</div>
+                <q-card-section class="text-center q-py-sm q-px-xs">
+                  <q-icon :name="t.icon" size="28px" />
+                  <div class="text-caption q-mt-xs text-weight-medium" style="font-size: 11px; line-height: 1.2">{{ t.label }}</div>
                   <div class="row justify-center q-mt-xs q-gutter-xs">
                     <div v-for="c in t.preview" :key="c" class="theme-preview-dot" :style="{ backgroundColor: c }" />
                   </div>
@@ -153,13 +157,15 @@
         </q-card-section>
         <q-separator />
         <q-card-section class="q-pt-sm">
-          <q-item tag="label" v-ripple class="q-pa-none">
+          <q-item tag="label" v-ripple class="q-pa-none" :disable="themeStore.isAlwaysDark">
             <q-item-section>
               <q-item-label>Modo oscuro</q-item-label>
-              <q-item-label caption>Alterna entre la variante clara y oscura del tema</q-item-label>
+              <q-item-label caption>
+                {{ themeStore.isAlwaysDark ? 'Este tema es siempre oscuro' : 'Alterna entre la variante clara y oscura del tema' }}
+              </q-item-label>
             </q-item-section>
             <q-item-section side>
-              <q-toggle :model-value="themeStore.darkMode" @update:model-value="themeStore.toggleDark" />
+              <q-toggle :model-value="themeStore.darkMode" @update:model-value="themeStore.toggleDark" :disable="themeStore.isAlwaysDark" />
             </q-item-section>
           </q-item>
         </q-card-section>
@@ -190,6 +196,7 @@ const navItems = [
   { icon: 'point_of_sale', label: 'Ventas', to: '/ventas' },
   { icon: 'inventory_2', label: 'Inventario', to: '/inventario' },
   { icon: 'people', label: 'Clientes', to: '/clientes' },
+  { icon: 'account_balance', label: 'Cortes', to: '/cortes-caja' },
   { icon: 'payments', label: 'Gastos', to: '/gastos' },
   { icon: 'bar_chart', label: 'Reportes', to: '/reportes' },
   { icon: 'manage_accounts', label: 'Usuarios', to: '/usuarios' },

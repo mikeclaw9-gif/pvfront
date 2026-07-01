@@ -19,7 +19,7 @@ export interface Theme {
   dark: ThemeColors;
 }
 
-export type ThemeId = 'corporate' | 'nature' | 'midnight';
+export type ThemeId = 'corporate' | 'nature' | 'midnight' | 'console' | 'obsidian';
 
 export const themes: Theme[] = [
   {
@@ -104,6 +104,67 @@ export const themes: Theme[] = [
       warning: '#FBBF24',
       'dark-page': '#0D0F14',
       dark: '#1A1D26',
+    },
+  },
+  {
+    // Console: terminal verde fosforescente sobre negro profundo.
+    // Ambas variantes (light y dark) son oscuras; la "light" es solo
+    // ligeramente menos intensa para no forzar un fondo blanco.
+    id: 'console',
+    label: 'Console',
+    icon: 'terminal',
+    preview: ['#00FF41', '#00CC33', '#0D0D0D'],
+    light: {
+      primary: '#00CC33',
+      secondary: '#009922',
+      accent: '#00FF41',
+      positive: '#00E676',
+      negative: '#FF3D3D',
+      info: '#00BCD4',
+      warning: '#FFEA00',
+      'dark-page': '#0D0D0D',
+      dark: '#141414',
+    },
+    dark: {
+      primary: '#00FF41',
+      secondary: '#00CC33',
+      accent: '#39FF14',
+      positive: '#00E676',
+      negative: '#FF5252',
+      info: '#18FFFF',
+      warning: '#FFD600',
+      'dark-page': '#060606',
+      dark: '#0D0D0D',
+    },
+  },
+  {
+    // Obsidian: oscuro neutro suave, inspirado en VS Code / OpenCode.
+    // Acentos violeta-cyan de baja saturación que no cansan la vista.
+    id: 'obsidian',
+    label: 'Obsidian',
+    icon: 'nights_stay',
+    preview: ['#C792EA', '#89DDFF', '#1E1E2E'],
+    light: {
+      primary: '#7B68EE',
+      secondary: '#56B6C2',
+      accent: '#C792EA',
+      positive: '#98C379',
+      negative: '#E06C75',
+      info: '#56B6C2',
+      warning: '#E5C07B',
+      'dark-page': '#1E1E2E',
+      dark: '#282838',
+    },
+    dark: {
+      primary: '#C792EA',
+      secondary: '#89DDFF',
+      accent: '#82AAFF',
+      positive: '#A3BE8C',
+      negative: '#BF616A',
+      info: '#88C0D0',
+      warning: '#EBCB8B',
+      'dark-page': '#13131F',
+      dark: '#1E1E2E',
     },
   },
 ];

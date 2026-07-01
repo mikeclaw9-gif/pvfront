@@ -140,6 +140,8 @@ createQuasarApp(createApp, quasarUserOptions)
 
     return Promise[ method ]([
       
+      import('boot/theme'),
+      
       import('boot/axios')
       
     ]).then(bootFiles => {
