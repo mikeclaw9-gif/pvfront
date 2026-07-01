@@ -2,7 +2,7 @@ import { configure } from 'quasar/wrappers';
 
 export default configure(function (ctx) {
   return {
-    boot: ['axios'],
+    boot: ['theme', 'axios'],
     css: ['app.scss'],
     extras: ['material-icons'],
     build: {

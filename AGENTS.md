@@ -40,15 +40,15 @@ Quasar 2 · Vue 3.5 · Pinia 2 · Vue Router 4 · Axios · TypeScript 5.5 · SCS
 
 ```
 src/
-├── api/          Axios functions per domain entity (auth, cliente, gasto, producto, reporte, usuario, venta)
-├── boot/         Axios boot file (baseURL /api, JWT interceptor, 401 → redirect /login)
+├── api/          Axios functions per domain entity (auth, cliente, corte-caja, gasto, producto, reporte, usuario, venta)
+├── boot/         Axios boot file + theme boot (pre-render dark mode for always-dark themes)
 ├── components/   Reusable Vue components (BackendStatusIndicator)
-├── css/          Global SCSS (theme CSS variables, transitions, scrollbar, resets)
-├── layouts/      MainLayout.vue — shell with bottom tabs (mobile) / drawer (desktop), 3-theme selector, dark mode toggle
-├── pages/        LoginPage, DashboardPage, InventarioPage, UsuariosPage, ClientesPage, VentasPage, GastosPage, ReportesPage
+├── css/          Global SCSS (theme CSS variables, transitions, scrollbar, resets, Console/Obsidian specifics)
+├── layouts/      MainLayout.vue — shell with bottom tabs (mobile) / drawer (desktop), 5-theme selector, dark mode toggle
+├── pages/        LoginPage, DashboardPage, InventarioPage, UsuariosPage, ClientesPage, VentasPage, GastosPage, CortesCajaPage, ReportesPage
 ├── router/       Hash-based routing (createWebHashHistory) with auth guard
-├── stores/       Pinia stores (auth, cliente, gasto, producto, theme, usuario, venta)
-├── theme/        Theme definitions (Corporate, Nature, Midnight) with light/dark palettes
+├── stores/       Pinia stores (auth, cliente, corte-caja, gasto, producto, theme, usuario, venta)
+├── theme/        Theme definitions (Corporate, Nature, Midnight, Console, Obsidian) with light/dark palettes
 └── utils/        PDF generator (jsPDF + jspdf-autotable)
 ```
 
@@ -63,6 +63,7 @@ src/
 | `/clientes` | ClientesPage | Client CRUD |
 | `/usuarios` | UsuariosPage | User CRUD (admin only) |
 | `/gastos` | GastosPage | Expense CRUD with filters + PDF |
+| `/cortes-caja` | CortesCajaPage | Cash register open/close management |
 | `/reportes` | ReportesPage | 7 report types with filters, charts, exports |
 
 ## Conventions
@@ -74,10 +75,12 @@ src/
 - **Auth**: JWT token persisted in `LocalStorage` via Quasar's wrapper. Axios interceptor attaches `Bearer` header. 401 responses clear token and redirect to `/login`.
 - **Routing**: Hash-based (`/#/login`, `/#/dashboard`). Guard redirects unauthenticated users to `/login`.
 - **Dark mode** toggle persisted in `LocalStorage('darkMode')`.
-- **3 themes**: Corporate (blue), Nature (green), Midnight (indigo/dark). Each has light/dark palettes defined in `src/theme/themes.ts`. Applied via CSS custom properties from `theme-store.ts`.
+- **5 themes**: Corporate (blue), Nature (green), Midnight (indigo/dark), Console (terminal green, always-dark), Obsidian (VS Code violet/cyan, always-dark). Each has light/dark palettes defined in `src/theme/themes.ts`. Applied via CSS custom properties from `theme-store.ts`.
+- **Always-dark themes** (`console`, `obsidian`): force `darkMode=true`, the dark mode toggle is disabled in the dialog, and `src/boot/theme.ts` applies their dark background before the first render to prevent white flash.
 - **PDF export** via `generarPdf(titulo, columnas, datos, nombreArchivo, filtros?)` in `src/utils/pdf.ts`. Opens PDF in new tab.
 - **Barcode scanning**: On mobile opens installed scanner app via ZXing intent; fallback uses `<input capture>` + `BarcodeDetector` API / `html5-qrcode.scanFile`. All camera access via image capture (no streaming) — works on HTTP.
 - **Reports module**: 7 endpoints (`ventas`, `stock`, `productos`, `gastos`, `dashboard`, `cortes-caja`, `clientes`). Structured response format: `{ titulo, columnas, filas, tipoGrafico, graficoNombre }`. Exports: JSON, Excel (HTML→XLS), PDF (jsPDF), Print (warning/yellow button). Charts via Chart.js in collapsible panel. Default date filters = today for ventas report. Detail dialog on ventas rows uses `GET /ventas/{id}/ticket` to show product names and line items.
+- **Cortes de Caja module**: Fetches the open corte via `GET /cortes-caja/abierto`, then independently fetches today's COMPLETED ventas (via `listarVentas` with date filter) and today's gastos (via `buscarGastosPorRangoFechas`) to calculate real totals client-side, since the backend returns `totalVentas: 0` and `totalGastos: 0` for open cortes. All date parameters must use the format `YYYY-MM-DDTHH:MM:SS` (no `Z`, no milliseconds) for Spring Boot `LocalDateTime` compatibility.
 - **Language**: Spanish (`lang: es` in quasar config). Material Icons.
 - **TypeScript**: strict mode, `@/*` path alias → `./src/*`. No `noUnusedLocals`/`noUnusedParameters`.
 - **Quasar plugins in use**: Dialog, Notify, Loading, LocalStorage.
@@ -88,6 +91,7 @@ src/
 Runs at `http://localhost:8090/api`. Endpoints mirror the frontend API files:
 - `POST /auth/login` — returns `{ token, email, nombre, apellido, rol }`
 - `/productos/*`, `/clientes/*`, `/usuarios/*`, `/gastos/*`, `/ventas/*` — full CRUD + `toggle-activo` + paginated list
+- `/cortes-caja/*` — open/close endpoints (`GET /cortes-caja/abierto`, `POST /cortes-caja/abrir`, `POST /cortes-caja/{id}/cerrar`, `GET /cortes-caja`, `GET /cortes-caja/{id}`)
 - `GET /reportes/{tipo}` — report data with `filter` (JSON string) and `formato` query params
 
 ## Dependencies added beyond Quasar scaffold
@@ -98,4 +102,4 @@ Runs at `http://localhost:8090/api`. Endpoints mirror the frontend API files:
 
 ## How to Answer
 Always answer in Spanish, using short answers; when asked for an explanation, provide more detailed answers.
-Always add the following text at the end of your answers: “---RESPUESTA---”
+Always add the following text at the end of your answers: "---RESPUESTA---"

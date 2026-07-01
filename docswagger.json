@@ -15,7 +15,7 @@
   },
   "servers": [
     {
-      "url": "http://192.168.100.19:8090/api",
+      "url": "http://localhost:8090/api",
       "description": "Generated server url"
     }
   ],
@@ -2009,6 +2009,9 @@
           "productoNombre": {
             "type": "string"
           },
+          "productoDescripcion": {
+            "type": "string"
+          },
           "productoPesado": {
             "type": "boolean"
           },
@@ -2763,6 +2766,9 @@
         "type": "object",
         "properties": {
           "producto": {
+            "type": "string"
+          },
+          "descripcion": {
             "type": "string"
           },
           "cantidad": {
